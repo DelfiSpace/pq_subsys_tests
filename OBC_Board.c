@@ -36,7 +36,7 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 01/05/2018 at 16:02:46
+// This file was automatically generated on 01/05/2018 at 16:57:52
 // by TI PinMux version 4.0.1511 
 //
 //*****************************************************************************
@@ -132,7 +132,7 @@ void MSP_EXP432P401R_initGeneral(void)
  *       reduce memory usage.
  */
 GPIO_PinConfig gpioPinConfigs[] = {
-    GPIOMSP432_P10_1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+    GPIOMSP432_P1_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
     GPIOMSP432_P9_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
 };
 
@@ -179,18 +179,18 @@ SPIMSP432DMA_Object spiMSP432DMAObjects[Board_SPICOUNT];
 /* SPI configuration structure */
 const SPIMSP432DMA_HWAttrsV1 spiMSP432DMAHWAttrs[Board_SPICOUNT] = {
     {
-        .baseAddr = EUSCI_A1_BASE,
-        .bitOrder = EUSCI_A_SPI_LSB_FIRST,
-        .clockSource = EUSCI_A_SPI_CLOCKSOURCE_SMCLK,
+        .baseAddr = EUSCI_B3_BASE,
+        .bitOrder = EUSCI_B_SPI_LSB_FIRST,
+        .clockSource = EUSCI_B_SPI_CLOCKSOURCE_SMCLK,
         .defaultTxBufValue = 0,
         .dmaIntNum = INT_DMA_INT1,
         .intPriority = (~0),
-        .rxDMAChannelIndex = DMA_CH3_EUSCIA1RX,
-        .txDMAChannelIndex = DMA_CH2_EUSCIA1TX,
-        .clkPin = SPIMSP432DMA_P2_2_UCA1CLK,
-        .simoPin = SPIMSP432DMA_P2_0_UCA1SIMO,
-        .somiPin = SPIMSP432DMA_P2_1_UCA1SOMI,
-        .stePin = SPIMSP432DMA_P2_3_UCA1STE,
+        .rxDMAChannelIndex = DMA_CH7_EUSCIB3RX0,
+        .txDMAChannelIndex = DMA_CH6_EUSCIB3TX0,
+        .clkPin = SPIMSP432DMA_P10_1_UCB3CLK,
+        .simoPin = SPIMSP432DMA_P10_2_UCB3SIMO,
+        .somiPin = SPIMSP432DMA_P10_3_UCB3SOMI,
+        //.stePin = SPIMSP432DMA_P__,
         .pinMode = EUSCI_SPI_3PIN
     },
 };
