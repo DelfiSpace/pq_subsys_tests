@@ -43,7 +43,7 @@
 #include <ti/sysbios/BIOS.h>
 
 /* Example/Board Header files */
-#include "Board.h"
+#include "OBC_Board.h"
 
 extern void *mainThread(void *arg0);
 
