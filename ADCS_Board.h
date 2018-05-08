@@ -36,8 +36,8 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 02/05/2018 at 17:26:43
-// by TI PinMux version 4.0.1511 
+// This file was automatically generated on 03/05/2018 at 17:29:03
+// by TI PinMux version 4.0.1519 
 //
 //*****************************************************************************
 #ifndef __BOARD_H__
@@ -74,7 +74,16 @@ extern "C" {
 typedef enum Board_GPIOName {
     FRAM_CS = 0,
     PQ9_EN = 1,
-    EXT_WDG = 2,
+    TOR_EN0 = 2,
+    TOR_EN1 = 3,
+    TOR_EN2 = 4,
+    TOR_POL0 = 5,
+    TOR_POL1 = 6,
+    TOR_POL2 = 7,
+    EXT_WDG = 8,
+    TOR_NSLEEP0 = 9,
+    TOR_NSLEEP1 = 10,
+    TOR_NSLEEP2 = 11,
     Board_GPIOCOUNT
 } Board_GPIOName;
 
@@ -84,6 +93,8 @@ typedef enum Board_GPIOName {
  */
 typedef enum Board_I2CName {
     I2C_MON = 0,
+    I2C_SEN1 = 1,
+    I2C_SEN2 = 2,
    Board_I2CCOUNT
 } Board_I2CName;
 

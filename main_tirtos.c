@@ -46,6 +46,7 @@
 #include "OBC_Board.h"
 
 extern void *mainThread(void *arg0);
+extern void *wdgThread(void *arg0);
 
 /* Stack size in bytes */
 #define THREADSTACKSIZE    1024
@@ -88,6 +89,20 @@ int main(void)
         /* pthread_create() failed */
         while (1);
     }
+
+    // WDG thread
+
+    pthread_t            thread_wdg;
+
+    priParam.sched_priority = 2;
+    pthread_attr_setschedparam(&attrs, &priParam);
+
+    /* Create WDG thread */
+    retc = pthread_create(&thread_wdg, &attrs, wdgThread, (void* )0);
+    if (retc != 0) {
+        /* pthread_create() failed */
+        while (1);
+     }
 
     BIOS_start();
 

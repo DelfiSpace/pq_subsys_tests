@@ -36,7 +36,7 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 02/05/2018 at 17:26:43
+// This file was automatically generated on 02/05/2018 at 17:25:59
 // by TI PinMux version 4.0.1511 
 //
 //*****************************************************************************
@@ -74,7 +74,15 @@ extern "C" {
 typedef enum Board_GPIOName {
     FRAM_CS = 0,
     PQ9_EN = 1,
-    EXT_WDG = 2,
+    DEB_STATUS0 = 2,
+    DEB_STATUS1 = 3,
+    DEB_STATUS2 = 4,
+    DEB_STATUS3 = 5,
+    BURN0 = 6,
+    BURN1 = 7,
+    BURN2 = 8,
+    BURN3 = 9,
+    EXT_WDG = 10,
     Board_GPIOCOUNT
 } Board_GPIOName;
 
@@ -86,15 +94,6 @@ typedef enum Board_I2CName {
     I2C_MON = 0,
    Board_I2CCOUNT
 } Board_I2CName;
-
-/*!
- *  @def    MSP_EXP432P401R_SPIName
- *  @brief  Enum of SPI names on the MSP_EXP432P401R dev board
- */
-typedef enum Board_SPIName {
-    FRAM = 0,
-   Board_SPICOUNT
-} Board_SPIName;
 
 /*!
  *  @def    MSP_EXP432P401R_UARTName

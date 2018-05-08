@@ -36,8 +36,8 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 02/05/2018 at 17:26:43
-// by TI PinMux version 4.0.1511 
+// This file was automatically generated on 03/05/2018 at 17:29:03
+// by TI PinMux version 4.0.1519 
 //
 //*****************************************************************************
 
@@ -62,7 +62,7 @@
 #include <ti/devices/msp432p4xx/driverlib/uart.h>
 #include <ti/devices/msp432p4xx/driverlib/wdt_a.h>
 
-#include "Board.h"
+#include "ADCS_Board.h"
 
 
 /*
@@ -134,7 +134,16 @@ void MSP_EXP432P401R_initGeneral(void)
 GPIO_PinConfig gpioPinConfigs[] = {
     GPIOMSP432_P1_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
     GPIOMSP432_P9_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+    GPIOMSP432_P3_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P7_4 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P7_7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P3_1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P7_5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P8_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
     GPIOMSP432_P4_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P3_2 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+    GPIOMSP432_P8_1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+    GPIOMSP432_P7_6 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
 };
 
 /*
@@ -173,6 +182,22 @@ const I2CMSP432_HWAttrsV1 i2cMSP432HWAttrs[Board_I2CCOUNT] = {
         .dataPin = I2CMSP432_P1_6_UCB0SDA,
         .clkPin = I2CMSP432_P1_7_UCB0SCL,
     },
+    {
+        .baseAddr = EUSCI_B2_BASE,
+        .intNum = INT_EUSCIB2,
+        .intPriority = (~0),
+        .clockSource = EUSCI_B_I2C_CLOCKSOURCE_SMCLK,
+        .dataPin = I2CMSP432_P3_6_UCB2SDA,
+        .clkPin = I2CMSP432_P3_7_UCB2SCL,
+    },
+    {
+        .baseAddr = EUSCI_B1_BASE,
+        .intNum = INT_EUSCIB1,
+        .intPriority = (~0),
+        .clockSource = EUSCI_B_I2C_CLOCKSOURCE_SMCLK,
+        .dataPin = I2CMSP432_P6_4_UCB1SDA,
+        .clkPin = I2CMSP432_P6_5_UCB1SCL,
+    },
 };
 
 const I2C_Config I2C_config[Board_I2CCOUNT] = {
@@ -180,6 +205,16 @@ const I2C_Config I2C_config[Board_I2CCOUNT] = {
         .fxnTablePtr = &I2CMSP432_fxnTable,
         .object = &i2cMSP432Objects[I2C_MON],
         .hwAttrs = &i2cMSP432HWAttrs[I2C_MON]
+    },
+    {
+        .fxnTablePtr = &I2CMSP432_fxnTable,
+        .object = &i2cMSP432Objects[I2C_SEN1],
+        .hwAttrs = &i2cMSP432HWAttrs[I2C_SEN1]
+    },
+    {
+        .fxnTablePtr = &I2CMSP432_fxnTable,
+        .object = &i2cMSP432Objects[I2C_SEN2],
+        .hwAttrs = &i2cMSP432HWAttrs[I2C_SEN2]
     },
 };
 
@@ -219,7 +254,7 @@ const SPIMSP432DMA_HWAttrsV1 spiMSP432DMAHWAttrs[Board_SPICOUNT] = {
         .clkPin = SPIMSP432DMA_P10_1_UCB3CLK,
         .simoPin = SPIMSP432DMA_P10_2_UCB3SIMO,
         .somiPin = SPIMSP432DMA_P10_3_UCB3SOMI,
-        .stePin = SPIMSP432DMA_P__,
+        //.stePin = SPIMSP432DMA_P__,
         .pinMode = EUSCI_SPI_3PIN
     },
 };

@@ -36,7 +36,7 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 02/05/2018 at 17:26:43
+// This file was automatically generated on 02/05/2018 at 17:25:59
 // by TI PinMux version 4.0.1511 
 //
 //*****************************************************************************
@@ -62,7 +62,7 @@
 #include <ti/devices/msp432p4xx/driverlib/uart.h>
 #include <ti/devices/msp432p4xx/driverlib/wdt_a.h>
 
-#include "Board.h"
+#include "ANT_Board.h"
 
 
 /*
@@ -132,8 +132,16 @@ void MSP_EXP432P401R_initGeneral(void)
  *       reduce memory usage.
  */
 GPIO_PinConfig gpioPinConfigs[] = {
-    GPIOMSP432_P1_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+    GPIOMSP432_P10_1 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_NONE,
     GPIOMSP432_P9_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_HIGH,
+    GPIOMSP432_P3_0 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_NONE,
+    GPIOMSP432_P3_2 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_NONE,
+    GPIOMSP432_P3_4 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_NONE,
+    GPIOMSP432_P3_6 | GPIO_CFG_IN_NOPULL | GPIO_CFG_IN_INT_NONE,
+    GPIOMSP432_P3_1 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P3_3 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P3_5 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
+    GPIOMSP432_P3_7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
     GPIOMSP432_P4_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_LOW | GPIO_CFG_OUT_LOW,
 };
 
@@ -195,44 +203,6 @@ const PowerMSP432_ConfigV1 PowerMSP432_config = {
     .enablePerf = true,
     .enableParking = true
 };
-
-/*
- *  =============================== SPI ===============================
- */
-#include <ti/drivers/SPI.h>
-#include <ti/drivers/spi/SPIMSP432DMA.h>
-
-/* SPI objects */
-SPIMSP432DMA_Object spiMSP432DMAObjects[Board_SPICOUNT];
-
-/* SPI configuration structure */
-const SPIMSP432DMA_HWAttrsV1 spiMSP432DMAHWAttrs[Board_SPICOUNT] = {
-    {
-        .baseAddr = EUSCI_B3_BASE,
-        .bitOrder = EUSCI_B_SPI_LSB_FIRST,
-        .clockSource = EUSCI_B_SPI_CLOCKSOURCE_SMCLK,
-        .defaultTxBufValue = 0,
-        .dmaIntNum = INT_DMA_INT1,
-        .intPriority = (~0),
-        .rxDMAChannelIndex = DMA_CH7_EUSCIB3RX0,
-        .txDMAChannelIndex = DMA_CH6_EUSCIB3TX0,
-        .clkPin = SPIMSP432DMA_P10_1_UCB3CLK,
-        .simoPin = SPIMSP432DMA_P10_2_UCB3SIMO,
-        .somiPin = SPIMSP432DMA_P10_3_UCB3SOMI,
-        .stePin = SPIMSP432DMA_P__,
-        .pinMode = EUSCI_SPI_3PIN
-    },
-};
-
-const SPI_Config SPI_config[Board_SPICOUNT] = {
-    {
-        .fxnTablePtr = &SPIMSP432DMA_fxnTable,
-        .object = &spiMSP432DMAObjects[FRAM],
-        .hwAttrs = &spiMSP432DMAHWAttrs[FRAM]
-    },
-};
-
-const uint_least8_t SPI_count = Board_SPICOUNT;
 
 /*
  *  =============================== UART ===============================

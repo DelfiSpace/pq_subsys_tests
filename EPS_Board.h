@@ -36,7 +36,7 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 02/05/2018 at 17:26:43
+// This file was automatically generated on 02/05/2018 at 14:09:16
 // by TI PinMux version 4.0.1511 
 //
 //*****************************************************************************
@@ -72,9 +72,17 @@ extern "C" {
  *  @brief  Enum of GPIO names on the MSP_EXP432P401R dev board
  */
 typedef enum Board_GPIOName {
-    FRAM_CS = 0,
-    PQ9_EN = 1,
-    EXT_WDG = 2,
+    PQ9_EN = 0,
+    EXT_WDG = 1,
+    SBSYS_EN_SW0 = 2,
+    SBSYS_EN_SW1 = 3,
+    SBSYS_EN_SW2 = 4,
+    SBSYS_EN_SW3 = 5,
+    FAULT_SW0 = 6,
+    FAULT_SW1 = 7,
+    FAULT_SW2 = 8,
+    FAULT_SW3 = 9,
+    FRAM_CS = 10,
     Board_GPIOCOUNT
 } Board_GPIOName;
 
@@ -83,7 +91,9 @@ typedef enum Board_GPIOName {
  *  @brief  Enum of I2C names on the MSP_EXP432P401R dev board
  */
 typedef enum Board_I2CName {
-    I2C_MON = 0,
+    EPS_BRD = 0,
+    EPS_BATT = 1,
+    EPS_SOL = 2,
    Board_I2CCOUNT
 } Board_I2CName;
 
