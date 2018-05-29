@@ -62,6 +62,8 @@ extern "C" {
 #define Board_initUART              UART_init
 #define Board_initWatchdog          Watchdog_init
 
+#define Board_TIMER0                MSP_EXP432P401R_TIMER_T32_0
+
 /* Board specific I2C addresses */
 #define Board_TMP_ADDR              (0x40)
 #define Board_RF430CL330_ADDR       (0x28)

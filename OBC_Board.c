@@ -62,7 +62,7 @@
 #include <ti/devices/msp432p4xx/driverlib/uart.h>
 #include <ti/devices/msp432p4xx/driverlib/wdt_a.h>
 
-#include "Board.h"
+#include "OBC_Board.h"
 
 
 /*
@@ -219,7 +219,7 @@ const SPIMSP432DMA_HWAttrsV1 spiMSP432DMAHWAttrs[Board_SPICOUNT] = {
         .clkPin = SPIMSP432DMA_P10_1_UCB3CLK,
         .simoPin = SPIMSP432DMA_P10_2_UCB3SIMO,
         .somiPin = SPIMSP432DMA_P10_3_UCB3SOMI,
-        .stePin = SPIMSP432DMA_P__,
+        //.stePin = SPIMSP432DMA_P__,
         .pinMode = EUSCI_SPI_3PIN
     },
 };
@@ -280,6 +280,7 @@ const UARTMSP432_HWAttrsV1 uartMSP432HWAttrs[Board_UARTCOUNT] = {
         .ringBufSize = sizeof(uartMSP432RingBuffer[PQ9]),
         .rxPin = UARTMSP432_P9_6_UCA3RXD,
         .txPin = UARTMSP432_P9_7_UCA3TXD,
+        .uartEUSCIMultiProcMode = true,
     },
     {
         .baseAddr = EUSCI_A0_BASE,
