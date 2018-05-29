@@ -70,8 +70,8 @@
 // TMP doesn't handle negative values
 
 
-#define SUBS_TESTS 5
-// OBC 1
+#define SUBS_TESTS 1
+// OBC 1, MASTER
 // ANT 2
 // ADCS 3
 // EPS 4
@@ -106,6 +106,8 @@ void rs_test() {
 
       UART_Params uartParams;
 
+#if (SUBS_TESTS == 1)
+
       GPIO_write(PQ9_EN, 1);
 
       /* Create a UART with data processing off. */
@@ -118,12 +120,86 @@ void rs_test() {
        uartParams.readEcho = UART_ECHO_ON;
        uartParams.baudRate = 9600;
 
-      uart_pq9_bus = UART_open(PQ9, &uartParams);
+#else
 
-      UART_write(uart_pq9_bus, "Hello PQ9\n", 10);
+       GPIO_write(PQ9_EN, 0);
+
+       /* Create a UART with data processing off. */
+       UART_Params_init(&uartParams);
+       uartParams.writeMode = UART_MODE_BLOCKING;
+         uartParams.writeDataMode = UART_DATA_BINARY;
+         uartParams.readMode = UART_MODE_CALLBACK;
+         uartParams.readDataMode = UART_DATA_BINARY;
+         uartParams.readReturnMode = UART_RETURN_FULL;
+         uartParams.readEcho = UART_ECHO_OFF;
+         uartParams.baudRate = 9600;
+         uartParams.readCallback = &temp;
+
+#endif
+
+        uart_pq9_bus = UART_open(PQ9, &uartParams);
+      sleep(1);
+
+      //UART_setDormant(uart_pq9_bus->hwAttrs);
+
 }
 
-UART_Handle uart_dbg_bus;
+void rs_tx_addr_test() {
+
+      UART_Params uartParams;
+
+      GPIO_write(PQ9_EN, 1);
+
+      char msg[] = "Testing RS tx\n";
+      UART_write(uart_dbg_bus, msg, strlen(msg));
+
+      char resp[10];
+      int32_t res = 0;
+      do {
+          //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
+          sleep(1);
+          char ts[] = { 0x55, 0x02, 0xDE, 0xAD };
+
+          res = UART_read(uart_dbg_bus, resp, 1);
+          if(res > 0 && resp[0] == 'a') {
+              UART_write(uart_dbg_bus, "Addr 0x55\n", 11);
+              ts[0] = 0x55;
+              UART_writePolling(uart_pq9_bus, ts, 4);
+          } else if(res > 0 && resp[0] == 's') {
+              UART_write(uart_dbg_bus, "Addr 0x75\n", 11);
+              ts[0] = 0x75;
+              UART_writePolling(uart_pq9_bus, ts, 4);
+          }
+          resp[0] = 'o';
+      } while(1);
+}
+
+extern uint8_t pq_rx_buf[300];
+extern uint16_t rx_count, size;
+extern bool rx_flag;
+
+void rs_rx_addr_test() {
+
+      UART_Params uartParams;
+
+      GPIO_write(PQ9_EN, 0);
+
+      char msg[] = "Testing RS rx\n";
+      UART_write(uart_dbg_bus, msg, strlen(msg));
+
+      char resp[10];
+      int32_t res = 0;
+      do {
+
+          if(rx_flag) {
+              rx_flag = 0;
+              sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",rx_count, size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
+              UART_write(uart_dbg_bus, msg, strlen(msg));
+          }
+
+          sleep(1);
+      } while(1);
+}
 
 void uart_test() {
 
@@ -1144,6 +1220,16 @@ void *mainThread(void *arg0)
 
     rs_test();
 
+#if (SUBS_TESTS == 1)
+    rs_tx_addr_test();
+#else
+    rs_rx_addr_test();
+#endif
+
+
+    while(1) {
+        sleep(1);
+    }
 
     //wdg_test();
 
