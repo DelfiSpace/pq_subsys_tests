@@ -747,7 +747,7 @@ void tmp_test(uint8_t i2c_add) {
              * Response from slave for GETSTATUS Cmd
              * rxBuffer[0] = status
              */
-            i2cTransaction.slaveAddress = 0x48;
+            i2cTransaction.slaveAddress = i2c_add;
             i2cTransaction.writeBuf = txBuffer;
             i2cTransaction.writeCount = 2;
             i2cTransaction.readBuf = rxBuffer;
@@ -767,7 +767,7 @@ void tmp_test(uint8_t i2c_add) {
              * Response from slave for GETSTATUS Cmd
              * rxBuffer[0] = status
              */
-            i2cTransaction.slaveAddress = 0x48;
+            i2cTransaction.slaveAddress = i2c_add;
             i2cTransaction.writeBuf = txBuffer;
             i2cTransaction.writeCount = 1;
             i2cTransaction.readBuf = rxBuffer;
