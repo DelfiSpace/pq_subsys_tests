@@ -315,6 +315,7 @@ const UARTMSP432_HWAttrsV1 uartMSP432HWAttrs[Board_UARTCOUNT] = {
         .ringBufSize = sizeof(uartMSP432RingBuffer[PQ9]),
         .rxPin = UARTMSP432_P9_6_UCA3RXD,
         .txPin = UARTMSP432_P9_7_UCA3TXD,
+        .uartEUSCIMultiProcMode = true,
     },
     {
         .baseAddr = EUSCI_A0_BASE,
