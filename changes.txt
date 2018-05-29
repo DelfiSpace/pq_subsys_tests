@@ -1,0 +1,194 @@
+
+
+
+Drivers uartmsp432.c
+
+/*
+ *  ======== Modifying ti drivers  ========
+ *  1. Add to ti/drivers/uart/UARTMSP432.c this function
+ *  2. add function definition
+ *  4. Modify UARTMSP432.c, the staticFxnTable() and
+ *     replace readIsrBinaryCallback with
+ *     readIsrModBinaryCallback
+ */ readIsrBinaryCallback
+
+// Modify UARTMSP432.h by adding the bool uartEUSCIMultiProcMode
+    /*! Application error function to be called on receive errors */
+    UARTMSP432_ErrorCallback errorFxn;
+    bool            uartEUSCIMultiProcMode;
+
+} UARTMSP432_HWAttrsV1;
+
+// Modify UARTMSP432.c by adding the lines in initHw
+static void initHw(UARTMSP432_Object *object,
+    UARTMSP432_HWAttrsV1 const *hwAttrs, uint32_t inputClkFreq)
+{
+....
+    uartConfig.numberofStopBits = stopBits[object->stopBits];
+    if(hwAttrs->uartEUSCIMultiProcMode){
+      uartConfig.uartMode = EUSCI_A_UART_ADDRESS_BIT_MULTI_PROCESSOR_MODE;
+    } else {
+      uartConfig.uartMode = EUSCI_A_UART_MODE;
+    }
+
+
+
+uint8_t pq_rx_buf[300];
+uint16_t rx_count, size;
+bool rx_flag;
+
+bool rx_pq9_bus(int readIn, uint_fast8_t addr) {
+
+  bool res = false;
+
+  if(addr && readIn == 0x55) {
+    pq_rx_buf[0] = readIn;
+    rx_count = 1;
+    res = true;
+  } else if(addr) {
+    rx_count = 0;
+    res = false;
+  } else if(rx_count == 1) {
+    size = readIn;
+    pq_rx_buf[rx_count] = readIn;
+    rx_count++;
+    res = false;
+  } else if(rx_count < size + 4 && rx_count != 0) {
+    pq_rx_buf[rx_count++] = readIn;
+    res = false;
+  } else if(rx_count == size + 4 && rx_count != 0) {
+    pq_rx_buf[rx_count++] = readIn;
+    rx_flag = true;
+    res = false;
+  } else {
+    res = false;
+  }
+
+  return res;
+}
+
+bool UART_getDormant(uint32_t moduleInstance)
+{
+    return BITBAND_PERI(EUSCI_A_CMSIS(moduleInstance)->CTLW0, EUSCI_A_CTLW0_DORM_OFS);
+}
+
+static bool readIsrModBinaryCallback(UART_Handle handle)
+{
+   int                         readIn;
+   bool                        ret = true;
+   UARTMSP432_Object          *object = handle->object;
+   UARTMSP432_HWAttrsV1 const *hwAttrs = handle->hwAttrs;
+
+   /*
+    * Here, we will do a quick check if another data byte has come in from
+    * when the RX interrupt was generated. This helps us avoid (not protect)
+    * data overruns by processing the next byte without having to wait for
+    * another RX interrupt ISR to kick in.
+    */
+   bool res = UART_getDormant(hwAttrs->baseAddr);
+
+   uint_fast8_t addr = UART_queryStatusFlags(hwAttrs->baseAddr,
+                                                    EUSCI_A_UART_ADDRESS_RECEIVED);
+
+   while (EUSCI_A_CMSIS(hwAttrs->baseAddr)->IFG & EUSCI_A_IFG_RXIFG) {
+       readIn = MAP_UART_receiveData(hwAttrs->baseAddr);
+
+
+
+       pq_rx_buf[rx_count++] = readIn;
+       if(rx_pq9_bus(readIn, res)) {
+         UART_resetDormant(hwAttrs->baseAddr);
+       } else {
+         UART_setDormant(hwAttrs->baseAddr);
+       }
+       res = false;
+
+   }
+   DebugP_log2("UART:(%p) buffered '0x%02x'", hwAttrs->baseAddr,
+       (unsigned char) readIn);
+
+   return (ret);
+}
+
+
+/*
+ *  ======== UARTMSP432_writePolling ========
+ */
+int_fast32_t UARTMSP432_writePolling(UART_Handle handle, const void *buf,
+        size_t size)
+{
+    uintptr_t                   key;
+    unsigned char *buffer = (unsigned char *) buf;
+    UARTMSP432_Object          *object = handle->object;
+    UARTMSP432_HWAttrsV1 const *hwAttrs = handle->hwAttrs;
+
+    if (!size) {
+        return (0);
+    }
+
+    key = HwiP_disable();
+
+    if (object->writeCount) {
+        HwiP_restore(key);
+        DebugP_log1("UART:(%p) Could not write data, uart in use.",
+            hwAttrs->baseAddr);
+
+        return (UART_ERROR);
+    }
+
+    /* Save the data to be written and restore interrupts. */
+    //object->writeBuf = &buf[1];
+    //object->writeSize = size - 1;
+    //object->writeCount = size - 1;
+
+    /*
+     * Set power constraint to keep peripheral active during transfer and
+     * to prevent a performance level change
+     */
+#if DeviceFamily_ID == DeviceFamily_ID_MSP432P401x
+    Power_setConstraint(PowerMSP432_DISALLOW_DEEPSLEEP_0);
+#endif
+    Power_setConstraint(PowerMSP432_DISALLOW_PERF_CHANGES);
+
+
+    /* Wait until the byte has gone out the wire. */
+    while (!MAP_UART_getInterruptStatus(hwAttrs->baseAddr,
+                   EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG));
+    /*
+     *  Atomically clear the TX complete flag so we don't wipe
+     *  out any incoming RX interrupts.
+     */
+    clearTXCPTIFG(hwAttrs->baseAddr);
+
+    //MAP_UART_transmitData(hwAttrs->baseAddr,  *buffer);
+    MAP_UART_transmitAddress(hwAttrs->baseAddr, *buffer);
+
+    /* Wait until the byte has gone out the wire. */
+    while (!MAP_UART_getInterruptStatus(hwAttrs->baseAddr,
+                   EUSCI_A_UART_TRANSMIT_COMPLETE_INTERRUPT_FLAG));
+
+                   size--;
+                   buffer++;
+
+    while(size) {
+      /* Wait until the byte has gone out the wire. */
+      while (!MAP_UART_getInterruptStatus(hwAttrs->baseAddr,
+                     EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG));
+      /*
+       *  Atomically clear the TX complete flag so we don't wipe
+       *  out any incoming RX interrupts.
+       */
+      clearTXCPTIFG(hwAttrs->baseAddr);
+
+      //MAP_UART_transmitData(hwAttrs->baseAddr,  *buffer);
+      MAP_UART_transmitData(hwAttrs->baseAddr, *buffer);
+
+      /* Wait until the byte has gone out the wire. */
+      while (!MAP_UART_getInterruptStatus(hwAttrs->baseAddr,
+                     EUSCI_A_UART_TRANSMIT_COMPLETE_INTERRUPT_FLAG));
+                     size--;
+                     buffer++;
+    }
+
+    return (0);
+}
