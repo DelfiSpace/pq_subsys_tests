@@ -781,7 +781,7 @@ void tmp_test(uint8_t i2c_add) {
 
                 sleep(1);
                 I2C_transfer(i2c, &i2cTransaction);
-                res_raw2 = (int16_t)((int16_t)(rxBuffer[0] << 8) | (int16_t)(rxBuffer[1])) >> 4;
+                res_raw2 = (int16_t)((int16_t)((int16_t)(rxBuffer[0] << 8) | (int16_t)(rxBuffer[1])) >> 4);
                 res_temp2 = (float)res_raw2 * 0.0625;
 
                 sprintf(msg, "Temp: %d, press key to continue\n", (int)res_temp2);
