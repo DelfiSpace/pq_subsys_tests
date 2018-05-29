@@ -94,9 +94,16 @@
  *  Each subsystem has the same uart and rs-485 peripherals, so no need for change.
  */
 
+UART_Handle uart_dbg_bus;
+UART_Handle uart_pq9_bus;
+
+void temp(UART_Handle handle, void *buf, size_t count) {
+
+}
+
 void rs_test() {
 
-      UART_Handle uart_pq9_bus;
+
       UART_Params uartParams;
 
       GPIO_write(PQ9_EN, 1);
@@ -141,9 +148,11 @@ void uart_test() {
 
       char resp[10];
       int32_t res = 0;
-      do {
+      //do {
+          UART_write(uart_dbg_bus, "Hello DBG\n", 10);
+          sleep(1);
         res = UART_read(uart_dbg_bus, resp, 1);
-      } while(res <= 0);
+     //} while(res <= 0);
 
 }
 
@@ -1098,6 +1107,8 @@ void wdg_test() {
         } while(res <= 0);
 }
 
+const
+
 void wdg_reset() {
 
           if(wdg_reset_flag) {
@@ -1124,14 +1135,15 @@ void *mainThread(void *arg0)
     I2C_init();
 
     #if (SUBS_TESTS >= 4 )
-    sw_open();
+      sw_open();
     #endif
 
 
 
     uart_test();
 
-    //rs_test();
+    rs_test();
+
 
     //wdg_test();
 
