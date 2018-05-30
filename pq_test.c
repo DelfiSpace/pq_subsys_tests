@@ -70,7 +70,9 @@
 // TMP doesn't handle negative values
 
 
-#define SUBS_TESTS 1
+#define SUBS_TESTS -1
+// RED -1
+// RED 0, MASTER
 // OBC 1, MASTER
 // ANT 2
 // ADCS 3
@@ -79,7 +81,9 @@
 // EPS with SOL  6
 // EPS complete  7
 
-#if (SUBS_TESTS == 1)
+#if (SUBS_TESTS == 0 || SUBS_TESTS == -1)
+#include "RED_Board.h"
+#elif (SUBS_TESTS == 1)
 #include "OBC_Board.h"
 #elif (SUBS_TESTS == 2)
 #include "ANT_Board.h"
@@ -106,7 +110,7 @@ void rs_test() {
 
       UART_Params uartParams;
 
-#if (SUBS_TESTS == 1)
+#if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
 
       GPIO_write(PQ9_EN, 1);
 
@@ -137,10 +141,10 @@ void rs_test() {
 
 #endif
 
-        uart_pq9_bus = UART_open(PQ9, &uartParams);
+      uart_pq9_bus = UART_open(PQ9, &uartParams);
       sleep(1);
 
-      //UART_setDormant(uart_pq9_bus->hwAttrs);
+      UART_setDormant(uart_pq9_bus->hwAttrs);
 
 }
 
@@ -1161,6 +1165,7 @@ void tor_test() {
 /*
  *  ------------ WDG functions ------------
  */
+#if (SUBS_TESTS > 0)
 
 bool wdg_reset_flag = true;
 
@@ -1183,8 +1188,6 @@ void wdg_test() {
         } while(res <= 0);
 }
 
-const
-
 void wdg_reset() {
 
           if(wdg_reset_flag) {
@@ -1195,6 +1198,7 @@ void wdg_reset() {
 
           usleep(100);
 }
+#endif
 
 /*
  *  ======== mainThread ========
@@ -1205,8 +1209,8 @@ void *mainThread(void *arg0)
     /* Call driver init functions */
     GPIO_init();
     UART_init();
-    #if (SUBS_TESTS != 2 )
-    SPI_init();
+    #if (SUBS_TESTS != 2 && SUBS_TESTS > 0)
+       SPI_init();
     #endif
     I2C_init();
 
@@ -1220,7 +1224,7 @@ void *mainThread(void *arg0)
 
     rs_test();
 
-#if (SUBS_TESTS == 1)
+#if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
     rs_tx_addr_test();
 #else
     rs_rx_addr_test();
@@ -1378,6 +1382,7 @@ void *mainThread(void *arg0)
  *  This thread runs on a higher priority, since wdg pin
  *  has to be ready for master.
  */
+#if (SUBS_TESTS > 0)
 void *wdgThread(void *arg0)
 {
 
@@ -1388,3 +1393,4 @@ void *wdgThread(void *arg0)
 
     return (NULL);
 }
+#endif

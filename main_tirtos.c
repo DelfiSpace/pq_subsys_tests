@@ -91,7 +91,7 @@ int main(void)
     }
 
     // WDG thread
-
+#if (SUBS_TESTS  > 0)
     pthread_t            thread_wdg;
 
     priParam.sched_priority = 2;
@@ -103,6 +103,7 @@ int main(void)
         /* pthread_create() failed */
         while (1);
      }
+#endif
 
     BIOS_start();
 
