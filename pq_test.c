@@ -48,6 +48,9 @@
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/UART.h>
 #include <ti/drivers/Watchdog.h>
+#define __MSP432P401R__
+#include <ti/devices/msp432p4xx/driverlib/uart.h>
+#include <ti/drivers/uart/UARTMSP432.h>
 
 #include "INA226.h"
 
@@ -144,7 +147,8 @@ void rs_test() {
       uart_pq9_bus = UART_open(PQ9, &uartParams);
       sleep(1);
 
-      UART_setDormant(uart_pq9_bus->hwAttrs);
+      UARTMSP432_HWAttrsV1 const *hwAttrs = uart_pq9_bus->hwAttrs;
+      UART_setDormant(hwAttrs->baseAddr);
 
 }
 
@@ -179,8 +183,8 @@ void rs_tx_addr_test() {
 }
 
 extern uint8_t pq_rx_buf[300];
-extern uint16_t rx_count, size;
-extern bool rx_flag;
+extern uint16_t pq_rx_count, pq_size;
+extern bool pq_rx_flag;
 
 void rs_rx_addr_test() {
 
@@ -195,9 +199,9 @@ void rs_rx_addr_test() {
       int32_t res = 0;
       do {
 
-          if(rx_flag) {
-              rx_flag = 0;
-              sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",rx_count, size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
+          if(pq_rx_flag) {
+              pq_rx_flag = 0;
+              sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
               UART_write(uart_dbg_bus, msg, strlen(msg));
           }
 

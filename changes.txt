@@ -34,42 +34,48 @@ static void initHw(UARTMSP432_Object *object,
 
 
 uint8_t pq_rx_buf[300];
-uint16_t rx_count, size;
-bool rx_flag;
+uint16_t pq_rx_count, pq_size;
+bool pq_rx_flag;
 
 bool rx_pq9_bus(int readIn, uint_fast8_t addr) {
 
   bool res = false;
 
   if(addr && readIn == 0x55) {
-    pq_rx_buf[0] = readIn;
-    rx_count = 1;
-    res = true;
-  } else if(addr) {
-    rx_count = 0;
-    res = false;
-  } else if(rx_count == 1) {
-    size = readIn;
-    pq_rx_buf[rx_count] = readIn;
-    rx_count++;
-    res = false;
-  } else if(rx_count < size + 4 && rx_count != 0) {
-    pq_rx_buf[rx_count++] = readIn;
-    res = false;
-  } else if(rx_count == size + 4 && rx_count != 0) {
-    pq_rx_buf[rx_count++] = readIn;
-    rx_flag = true;
-    res = false;
-  } else {
-    res = false;
-  }
+      pq_rx_buf[0] = readIn;
+      pq_rx_count = 1;
+      res = true;
+    } else if(addr) {
+      pq_rx_count = 0;
+      res = false;
+    } else if(pq_rx_count == 1) {
+      pq_size = readIn;
+      pq_rx_buf[pq_rx_count] = readIn;
+      pq_rx_count++;
+      res = true;
+    } else if(pq_rx_count < pq_size + 1 && pq_rx_count != 0) {
+      pq_rx_buf[pq_rx_count] = readIn;
+      pq_rx_count++;
+      res = true;
+    } else if(pq_rx_count == pq_size + 1 && pq_rx_count != 0) {
+      pq_rx_buf[pq_rx_count] = readIn;
+      pq_rx_count++;
+      pq_rx_flag = true;
+      res = false;
+    } else {
+      pq_rx_count = 0;
+      res = false;
+    }
 
   return res;
 }
 
 bool UART_getDormant(uint32_t moduleInstance)
 {
-    return BITBAND_PERI(EUSCI_A_CMSIS(moduleInstance)->CTLW0, EUSCI_A_CTLW0_DORM_OFS);
+  uint16_t reg = EUSCI_A_CMSIS(moduleInstance)->CTLW0;
+  uint16_t mask = reg & EUSCI_A_CTLW0_DORM;
+  bool res = (mask == EUSCI_A_CTLW0_DORM);
+  return res;
 }
 
 static bool readIsrModBinaryCallback(UART_Handle handle)
@@ -85,23 +91,18 @@ static bool readIsrModBinaryCallback(UART_Handle handle)
     * data overruns by processing the next byte without having to wait for
     * another RX interrupt ISR to kick in.
     */
-   bool res = UART_getDormant(hwAttrs->baseAddr);
 
-   uint_fast8_t addr = UART_queryStatusFlags(hwAttrs->baseAddr,
-                                                    EUSCI_A_UART_ADDRESS_RECEIVED);
+   bool addr = (UART_queryStatusFlags(hwAttrs->baseAddr, EUSCI_A_UART_ADDRESS_RECEIVED) == EUSCI_A_UART_ADDRESS_RECEIVED);
 
    while (EUSCI_A_CMSIS(hwAttrs->baseAddr)->IFG & EUSCI_A_IFG_RXIFG) {
        readIn = MAP_UART_receiveData(hwAttrs->baseAddr);
 
-
-
-       pq_rx_buf[rx_count++] = readIn;
-       if(rx_pq9_bus(readIn, res)) {
+       if(rx_pq9_bus(readIn, addr)) {
          UART_resetDormant(hwAttrs->baseAddr);
        } else {
          UART_setDormant(hwAttrs->baseAddr);
        }
-       res = false;
+       addr = false;
 
    }
    DebugP_log2("UART:(%p) buffered '0x%02x'", hwAttrs->baseAddr,
