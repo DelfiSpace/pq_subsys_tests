@@ -53,11 +53,11 @@ bool rx_pq9_bus(int readIn, uint_fast8_t addr) {
       pq_rx_buf[pq_rx_count] = readIn;
       pq_rx_count++;
       res = true;
-    } else if(pq_rx_count < pq_size + 1 && pq_rx_count != 0) {
+    } else if(pq_rx_count < pq_size + 5 - 1 && pq_rx_count != 0) {
       pq_rx_buf[pq_rx_count] = readIn;
       pq_rx_count++;
       res = true;
-    } else if(pq_rx_count == pq_size + 1 && pq_rx_count != 0) {
+    } else if(pq_rx_count == pq_size + 5 - 1 && pq_rx_count != 0) {
       pq_rx_buf[pq_rx_count] = readIn;
       pq_rx_count++;
       pq_rx_flag = true;
