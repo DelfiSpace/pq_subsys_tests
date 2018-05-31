@@ -220,12 +220,23 @@ void rs_rx_addr_test() {
 
       char resp[10];
       int32_t res = 0;
+
+      uint8_t data[100];
+      pq9_pkt rx_pq_pkt;
+      rx_pq_pkt.msg = data;
+
       do {
 
           if(pq_rx_flag) {
               pq_rx_flag = 0;
               sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
               UART_write(uart_dbg_bus, msg, strlen(msg));
+
+              bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
+
+              sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
+              UART_write(uart_dbg_bus, msg, strlen(msg));
+
           }
 
           sleep(1);
