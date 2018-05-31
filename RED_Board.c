@@ -878,6 +878,7 @@ const UARTMSP432_BaudrateConfig uartMSP432Baudrates[] = {
         .hwRegUCBRSx = 37,
         .oversampling = 1
     },
+    {500000, 12000000,  1,  8,   0, 1},
     {115200, 12000000,  6,  8,  32, 1},
     {115200, 6000000,   3,  4,   2, 1},
     {115200, 3000000,   1, 10,   0, 1},
