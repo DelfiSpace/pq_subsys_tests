@@ -200,6 +200,14 @@ void rs_tx_addr_test() {
               pq_tx_buf[1] = 2;
               UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
 
+          } else if(res > 0 && resp[0] == 'e') {
+              UART_write(uart_dbg_bus, "E Addr 0x55\n", 13);
+
+              test_pkt.dest_id = 0x55;
+              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+              //giving wrong size
+              pq_tx_buf[1] = 6;
+              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
           }
           resp[0] = 'o';
       } while(1);
