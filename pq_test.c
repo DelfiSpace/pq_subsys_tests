@@ -112,44 +112,26 @@ void temp(UART_Handle handle, void *buf, size_t count) {
 void rs_test() {
 
 
-      UART_Params uartParams;
+  UART_Params uartParams;
 
-#if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
+  GPIO_write(PQ9_EN, 0);
 
-      GPIO_write(PQ9_EN, 1);
+  /* Create a UART with data processing off. */
+  UART_Params_init(&uartParams);
+  uartParams.writeMode = UART_MODE_BLOCKING;
+  uartParams.writeDataMode = UART_DATA_BINARY;
+  uartParams.readMode = UART_MODE_CALLBACK;
+  uartParams.readDataMode = UART_DATA_BINARY;
+  uartParams.readReturnMode = UART_RETURN_FULL;
+  uartParams.readEcho = UART_ECHO_OFF;
+  uartParams.baudRate = 9600;
+  uartParams.readCallback = &temp;
 
-      /* Create a UART with data processing off. */
-      UART_Params_init(&uartParams);
-       uartParams.writeMode = UART_MODE_BLOCKING;
-       uartParams.writeDataMode = UART_DATA_BINARY;
-       uartParams.readMode = UART_MODE_BLOCKING;
-       uartParams.readDataMode = UART_DATA_BINARY;
-       uartParams.readReturnMode = UART_RETURN_FULL;
-       uartParams.readEcho = UART_ECHO_ON;
-       uartParams.baudRate = 9600;
+  uart_pq9_bus = UART_open(PQ9, &uartParams);
+  sleep(1);
 
-#else
-
-       GPIO_write(PQ9_EN, 0);
-
-       /* Create a UART with data processing off. */
-       UART_Params_init(&uartParams);
-       uartParams.writeMode = UART_MODE_BLOCKING;
-         uartParams.writeDataMode = UART_DATA_BINARY;
-         uartParams.readMode = UART_MODE_CALLBACK;
-         uartParams.readDataMode = UART_DATA_BINARY;
-         uartParams.readReturnMode = UART_RETURN_FULL;
-         uartParams.readEcho = UART_ECHO_OFF;
-         uartParams.baudRate = 9600;
-         uartParams.readCallback = &temp;
-
-#endif
-
-      uart_pq9_bus = UART_open(PQ9, &uartParams);
-      sleep(1);
-
-      UARTMSP432_HWAttrsV1 const *hwAttrs = uart_pq9_bus->hwAttrs;
-      UART_setDormant(hwAttrs->baseAddr);
+  UARTMSP432_HWAttrsV1 const *hwAttrs = uart_pq9_bus->hwAttrs;
+  UART_setDormant(hwAttrs->baseAddr);
 
 }
 
@@ -161,92 +143,126 @@ uint8_t get_subs_addr() {
   #endif
 }
 
-void rs_tx_addr_test() {
-
-      UART_Params uartParams;
-
-      GPIO_write(PQ9_EN, 0);
-
-      char msg[] = "Testing RS tx\n";
-      UART_write(uart_dbg_bus, msg, strlen(msg));
-
-      char resp[10];
-      int32_t res = 0;
-      do {
-          //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
-          sleep(1);
-          char msg[] = { 0xDE, 0xAD, 0xBE, 0xEF };
-
-          pq9_pkt test_pkt;
-          test_pkt.src_id = 1;
-          test_pkt.size = 4;
-          test_pkt.msg = msg;
-          char pq_tx_buf[20];
-          uint16_t pq_tx_size;
-
-          res = UART_read(uart_dbg_bus, resp, 1);
-          if(res > 0 && resp[0] == 'a') {
-              UART_write(uart_dbg_bus, "Addr 0x55\n", 11);
-
-              test_pkt.dest_id = 0x55;
-              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
-              GPIO_write(PQ9_EN, 1);
-              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
-              GPIO_write(PQ9_EN, 0);
-
-          } else if(res > 0 && resp[0] == 's') {
-              UART_write(uart_dbg_bus, "Addr 0x75\n", 11);
-
-              test_pkt.dest_id = 0x75;
-              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
-              GPIO_write(PQ9_EN, 1);
-              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
-              GPIO_write(PQ9_EN, 0);
-
-          } else if(res > 0 && resp[0] == 'w') {
-              UART_write(uart_dbg_bus, "W Addr 0x55\n", 13);
-
-              test_pkt.dest_id = 0x55;
-              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
-              //giving wrong size
-              pq_tx_buf[1] = 2;
-              GPIO_write(PQ9_EN, 1);
-              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
-              GPIO_write(PQ9_EN, 0);
-
-          } else if(res > 0 && resp[0] == 'e') {
-              UART_write(uart_dbg_bus, "E Addr 0x55\n", 13);
-
-              test_pkt.dest_id = 0x55;
-              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
-              //giving wrong size
-              pq_tx_buf[1] = 6;
-              GPIO_write(PQ9_EN, 1);
-              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
-              GPIO_write(PQ9_EN, 0);
-
-          } else if(res > 0 && resp[0] == 'r') {
-              UART_write(uart_dbg_bus, "R Addr 0x55\n", 13);
-
-              uint8_t req[] = { 17, 1};
-
-              test_pkt.dest_id = 0x55;
-              test_pkt.size = 2;
-              test_pkt.msg = req;
-              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
-              test_pkt.msg = msg;
-
-              GPIO_write(PQ9_EN, 1);
-              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
-              GPIO_write(PQ9_EN, 0);
-          }
-          resp[0] = 'o';
-      } while(1);
-}
-
 extern uint8_t pq_rx_buf[300];
 extern uint16_t pq_rx_count, pq_size;
 extern bool pq_rx_flag;
+
+void rs_tx_addr_test() {
+
+  UART_Params uartParams;
+
+  GPIO_write(PQ9_EN, 0);
+
+  char msg[] = "Testing RS tx\n";
+  UART_write(uart_dbg_bus, msg, strlen(msg));
+
+  char resp[10];
+  int32_t res = 0;
+  do {
+    //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
+    sleep(1);
+    char data[] = { 0xDE, 0xAD, 0xBE, 0xEF };
+
+    pq9_pkt test_pkt;
+    test_pkt.src_id = 1;
+    test_pkt.size = 4;
+    test_pkt.msg = data;
+    char pq_tx_buf[20];
+    uint16_t pq_tx_size;
+
+    res = UART_read(uart_dbg_bus, resp, 1);
+    if(res > 0 && resp[0] == 'a') {
+        sprintf(msg, "Sending packet addr 0x55\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        test_pkt.dest_id = 0x55;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
+    } else if(res > 0 && resp[0] == 's') {
+        sprintf(msg, "Sending packet addr 0x75\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        test_pkt.dest_id = 0x75;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
+    } else if(res > 0 && resp[0] == 'w') {
+        sprintf(msg, "Error packet addr 0x55\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        test_pkt.dest_id = 0x55;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        //giving wrong size
+        pq_tx_buf[1] = 2;
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
+    } else if(res > 0 && resp[0] == 'e') {
+        sprintf(msg, "Error packet addr 0x55\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        test_pkt.dest_id = 0x55;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        //giving wrong size
+        pq_tx_buf[1] = 6;
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
+    } else if(res > 0 && resp[0] == 'r') {
+        sprintf(msg, "Sending query addr 0x55\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        uint8_t req[] = { 17, 1};
+
+        test_pkt.dest_id = 0x55;
+        test_pkt.size = 2;
+        test_pkt.msg = req;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        test_pkt.msg = data;
+
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+    }
+    resp[0] = 'o';
+
+    if(pq_rx_flag) {
+
+      uint8_t data[100];
+      pq9_pkt rx_pq_pkt;
+      rx_pq_pkt.msg = data;
+
+      pq_rx_flag = 0;
+      sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
+      UART_write(uart_dbg_bus, msg, strlen(msg));
+
+      bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
+
+      sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
+      UART_write(uart_dbg_bus, msg, strlen(msg));
+
+      if(unpack_res == false && data[0] == 17 && data[1] == 2) {
+
+        sprintf(msg, "Got RESPONSE\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+      }
+      sleep(1);
+    }
+
+
+
+  } while(1);
+}
+
+
 
 void rs_rx_addr_test() {
 

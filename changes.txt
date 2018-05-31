@@ -45,7 +45,7 @@ bool rx_pq9_bus(int readIn, uint_fast8_t addr) {
 
   uint8_t subs_addr = get_subs_addr();
 
-  if(addr && readIn == 0x55) {
+  if(addr && readIn == subs_addr) {
       pq_rx_buf[0] = readIn;
       pq_rx_count = 1;
       res = true;
