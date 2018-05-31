@@ -155,8 +155,9 @@ bool unpack_PQ9_BUS(const uint8_t *buf,
 
   pq_pkt->dest_id = buf[0];
   pq_pkt->size = buf[1];
+  pq_pkt->src_id = buf[2];
 
-  if(pq_pkt->size != size - 4) {
+  if(pq_pkt->size != size - 5) {
     return true;
   }
 
@@ -167,13 +168,13 @@ bool unpack_PQ9_BUS(const uint8_t *buf,
   uint16_t crc_calc = calculate_crc_PQ9(buf, size - 2);
   uint16_t crc_pkt = 0;
 
-  cnv8_16(crc_pkt, &buf[size-2]);
+  cnv8_16LE(&buf[size-2], &crc_pkt);
 
-  if(crc_calc == crc_pkt) {
+  if(crc_calc != crc_pkt) {
     return true;
   }
 
-  memcpy(pq_pkt->msg, &buf[2], pq_pkt->size);
+  memcpy(pq_pkt->msg, &buf[3], pq_pkt->size);
 
 // #if(SYSTEM_APP_ID != PQ9_MASTER_APP_ID)
 //   enable_PQ9_tx();
