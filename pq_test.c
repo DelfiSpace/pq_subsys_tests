@@ -153,11 +153,19 @@ void rs_test() {
 
 }
 
+uint8_t get_subs_addr() {
+  #if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
+      return 0x75;
+  #else
+      return 0x55;
+  #endif
+}
+
 void rs_tx_addr_test() {
 
       UART_Params uartParams;
 
-      GPIO_write(PQ9_EN, 1);
+      GPIO_write(PQ9_EN, 0);
 
       char msg[] = "Testing RS tx\n";
       UART_write(uart_dbg_bus, msg, strlen(msg));
@@ -182,14 +190,18 @@ void rs_tx_addr_test() {
 
               test_pkt.dest_id = 0x55;
               pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+              GPIO_write(PQ9_EN, 1);
               UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+              GPIO_write(PQ9_EN, 0);
 
           } else if(res > 0 && resp[0] == 's') {
               UART_write(uart_dbg_bus, "Addr 0x75\n", 11);
 
               test_pkt.dest_id = 0x75;
               pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+              GPIO_write(PQ9_EN, 1);
               UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+              GPIO_write(PQ9_EN, 0);
 
           } else if(res > 0 && resp[0] == 'w') {
               UART_write(uart_dbg_bus, "W Addr 0x55\n", 13);
@@ -198,7 +210,9 @@ void rs_tx_addr_test() {
               pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
               //giving wrong size
               pq_tx_buf[1] = 2;
+              GPIO_write(PQ9_EN, 1);
               UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+              GPIO_write(PQ9_EN, 0);
 
           } else if(res > 0 && resp[0] == 'e') {
               UART_write(uart_dbg_bus, "E Addr 0x55\n", 13);
@@ -207,7 +221,24 @@ void rs_tx_addr_test() {
               pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
               //giving wrong size
               pq_tx_buf[1] = 6;
+              GPIO_write(PQ9_EN, 1);
               UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+              GPIO_write(PQ9_EN, 0);
+
+          } else if(res > 0 && resp[0] == 'r') {
+              UART_write(uart_dbg_bus, "R Addr 0x55\n", 13);
+
+              uint8_t req[] = { 17, 1};
+
+              test_pkt.dest_id = 0x55;
+              test_pkt.size = 2;
+              test_pkt.msg = req;
+              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+              test_pkt.msg = msg;
+
+              GPIO_write(PQ9_EN, 1);
+              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+              GPIO_write(PQ9_EN, 0);
           }
           resp[0] = 'o';
       } while(1);
@@ -223,10 +254,9 @@ void rs_rx_addr_test() {
 
       GPIO_write(PQ9_EN, 0);
 
-      char msg[] = "Testing RS rx\n";
+      char msg[30] = "Testing RS rx\n";
       UART_write(uart_dbg_bus, msg, strlen(msg));
 
-      char resp[10];
       int32_t res = 0;
 
       uint8_t data[100];
@@ -244,6 +274,26 @@ void rs_rx_addr_test() {
 
               sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
               UART_write(uart_dbg_bus, msg, strlen(msg));
+
+              if(unpack_res == false && data[0] == 17 && data[1] == 1) {
+                char resp[] = { 17, 2};
+
+                sprintf(msg, "Got request, sending resp\n");
+                UART_write(uart_dbg_bus, msg, strlen(msg));
+
+                pq9_pkt test_pkt;
+                test_pkt.src_id = 1;
+                test_pkt.size = 2;
+                test_pkt.msg = resp;
+                char pq_tx_buf[20];
+                uint16_t pq_tx_size;
+
+                test_pkt.dest_id = 0x75;
+                pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+                GPIO_write(PQ9_EN, 1);
+                UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+                GPIO_write(PQ9_EN, 0);
+              }
 
           }
 

@@ -37,9 +37,13 @@ uint8_t pq_rx_buf[300];
 uint16_t pq_rx_count, pq_size;
 bool pq_rx_flag;
 
+extern uint8_t get_subs_addr();
+
 bool rx_pq9_bus(int readIn, uint_fast8_t addr) {
 
   bool res = false;
+
+  uint8_t subs_addr = get_subs_addr();
 
   if(addr && readIn == 0x55) {
       pq_rx_buf[0] = readIn;
