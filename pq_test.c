@@ -186,9 +186,18 @@ void rs_tx_addr_test() {
 
           } else if(res > 0 && resp[0] == 's') {
               UART_write(uart_dbg_bus, "Addr 0x75\n", 11);
-              test_pkt.dest_id = 0x75;
 
+              test_pkt.dest_id = 0x75;
               pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+              UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+
+          } else if(res > 0 && resp[0] == 'w') {
+              UART_write(uart_dbg_bus, "W Addr 0x55\n", 13);
+
+              test_pkt.dest_id = 0x55;
+              pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+              //giving wrong size
+              pq_tx_buf[1] = 2;
               UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
 
           }
