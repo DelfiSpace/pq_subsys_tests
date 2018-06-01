@@ -153,7 +153,7 @@ void rs_tx_addr_test() {
 
   GPIO_write(PQ9_EN, 0);
 
-  char msg[] = "Testing RS tx\n";
+  char msg[50] = "Testing RS tx\n";
   UART_write(uart_dbg_bus, msg, strlen(msg));
 
   char resp[10];
