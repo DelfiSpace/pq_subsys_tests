@@ -272,7 +272,82 @@ void rs_tx_addr_test() {
   } while(1);
 }
 
+uint32_t test_tx_pkt_cnt = 0;
+uint32_t test_rx_pkt_cnt = 0;
 
+void rs_tx_stress_test() {
+
+  UART_Params uartParams;
+
+  GPIO_write(PQ9_EN, 0);
+
+  char msg[50] = "Testing RS stress tx\n";
+  UART_write(uart_dbg_bus, msg, strlen(msg));
+
+  char resp[10];
+  int32_t res = 0;
+
+    //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
+  sleep(1);
+  uint8_t req[] = { 17, 1};
+
+  pq9_pkt test_pkt;
+  test_pkt.src_id = 1;
+  test_pkt.size = 2;
+  test_pkt.msg = req;
+  char pq_tx_buf[20];
+  uint16_t pq_tx_size;
+
+  sprintf(msg, "Sending query addr 0x55\n");
+  UART_write(uart_dbg_bus, msg, strlen(msg));
+
+
+  test_pkt.dest_id = 0x55;
+  test_pkt.size = 2;
+  test_pkt.msg = req;
+  pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+
+  uint8_t data[100];
+  pq9_pkt rx_pq_pkt;
+  rx_pq_pkt.msg = data;
+
+  uint16_t msg_cnt = 0;
+
+  do {
+        GPIO_write(PQ9_EN, 1);
+        UART_write(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+        test_tx_pkt_cnt++;
+
+        usleep(10000);
+
+        if(pq_rx_flag) {
+          pq_rx_flag = 0;
+          //sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
+          //UART_write(uart_dbg_bus, msg, strlen(msg));
+
+          bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
+
+          //sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
+          //UART_write(uart_dbg_bus, msg, strlen(msg));
+
+          if(unpack_res == false && data[0] == 17 && data[1] == 2) {
+
+            //sprintf(msg, "Got RESPONSE\n");
+            //UART_write(uart_dbg_bus, msg, strlen(msg));
+            test_rx_pkt_cnt++;
+          }
+        }
+
+        if(msg_cnt == 1000) {
+            msg_cnt = 0;
+            sprintf(msg, "Str %d, %d\n", test_tx_pkt_cnt, test_rx_pkt_cnt);
+            UART_write(uart_dbg_bus, msg, strlen(msg));
+        }
+        msg_cnt++;
+
+  } while(1);
+}
 
 void rs_rx_addr_test() {
 
@@ -302,6 +377,9 @@ void rs_rx_addr_test() {
               UART_write(uart_dbg_bus, msg, strlen(msg));
 
               if(unpack_res == false && data[0] == 17 && data[1] == 1) {
+
+                test_rx_pkt_cnt++;
+
                 char resp[] = { 17, 2};
 
                 sprintf(msg, "Got request, sending resp\n");
@@ -1347,7 +1425,8 @@ void *mainThread(void *arg0)
     rs_test();
 
 #if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
-    rs_tx_addr_test();
+    //rs_tx_addr_test();
+    rs_tx_stress_test();
 #else
     rs_rx_addr_test();
 #endif
