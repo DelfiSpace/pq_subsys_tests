@@ -33,6 +33,22 @@ static void initHw(UARTMSP432_Object *object,
 
 
 
+/*  Modify= writeData ========
+ */
+static void writeData(UART_Handle handle)
+{
+    else {
+          // Adding transmit address for first byte
+          if(object->writeSize == object->writeCount) {
+            MAP_UART_transmitAddress(hwAttrs->baseAddr, *writePtr);
+          } else {
+            MAP_UART_transmitData(hwAttrs->baseAddr, *writePtr);
+          }
+          object->writeCount--;
+          DebugP_log2("UART:(%p) Wrote 0x%x", hwAttrs->baseAddr, *writePtr);
+      }
+  }
+
 uint8_t pq_rx_buf[300];
 uint16_t pq_rx_count, pq_size;
 bool pq_rx_flag;

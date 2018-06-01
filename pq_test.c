@@ -181,6 +181,16 @@ void rs_tx_addr_test() {
         UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
         GPIO_write(PQ9_EN, 0);
 
+    } else if(res > 0 && resp[0] == 'z') {
+        sprintf(msg, "Sending packet Wr addr 0x55\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        test_pkt.dest_id = 0x55;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        GPIO_write(PQ9_EN, 1);
+        UART_write(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
     } else if(res > 0 && resp[0] == 's') {
         sprintf(msg, "Sending packet addr 0x75\n");
         UART_write(uart_dbg_bus, msg, strlen(msg));
