@@ -365,38 +365,39 @@ void rs_rx_addr_test() {
       pq9_pkt rx_pq_pkt;
       rx_pq_pkt.msg = data;
 
+      pq9_pkt test_pkt;
+      char resp[] = { 17, 2};
+
+      test_pkt.src_id = 1;
+      test_pkt.size = 2;
+      test_pkt.msg = resp;
+      char pq_tx_buf[20];
+      uint16_t pq_tx_size;
+
+      test_pkt.dest_id = 0x75;
+      pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+
       do {
 
           if(pq_rx_flag) {
               pq_rx_flag = 0;
-              sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
-              UART_write(uart_dbg_bus, msg, strlen(msg));
+              //sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
+              //UART_write(uart_dbg_bus, msg, strlen(msg));
 
               bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
 
-              sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
-              UART_write(uart_dbg_bus, msg, strlen(msg));
+              //sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
+              //UART_write(uart_dbg_bus, msg, strlen(msg));
 
               if(unpack_res == false && data[0] == 17 && data[1] == 1) {
 
                 test_rx_pkt_cnt++;
 
-                char resp[] = { 17, 2};
+                //sprintf(msg, "Got request, sending resp\n");
+                //UART_write(uart_dbg_bus, msg, strlen(msg));
 
-                sprintf(msg, "Got request, sending resp\n");
-                UART_write(uart_dbg_bus, msg, strlen(msg));
-
-                pq9_pkt test_pkt;
-                test_pkt.src_id = 1;
-                test_pkt.size = 2;
-                test_pkt.msg = resp;
-                char pq_tx_buf[20];
-                uint16_t pq_tx_size;
-
-                test_pkt.dest_id = 0x75;
-                pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
                 GPIO_write(PQ9_EN, 1);
-                UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+                UART_write(uart_pq9_bus, pq_tx_buf, pq_tx_size);
                 GPIO_write(PQ9_EN, 0);
               }
 
