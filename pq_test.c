@@ -75,6 +75,7 @@
 
 
 #define SUBS_TESTS 0
+// OBC sniffer -2
 // RED -1
 // RED 0, MASTER
 // OBC 1, MASTER
@@ -87,7 +88,7 @@
 
 #if (SUBS_TESTS == 0 || SUBS_TESTS == -1)
 #include "RED_Board.h"
-#elif (SUBS_TESTS == 1)
+#elif (SUBS_TESTS == 1 || SUBS_TESTS == -2)
 #include "OBC_Board.h"
 #elif (SUBS_TESTS == 2)
 #include "ANT_Board.h"
@@ -403,6 +404,104 @@ void rs_rx_addr_test() {
 
           sleep(1);
       } while(1);
+}
+
+#define HLDLC_START_FLAG        0x7E
+#define HLDLC_CONTROL_FLAG      0x7D
+#define HLDLC_STOP_FLAG         0x7C
+
+void HLDLC_frame(uint8_t *buf_in, uint8_t *buf_out, uint16_t *size) {
+
+    uint16_t cnt = 2;
+
+    for(uint16_t i = 0; i < *size; i++) {
+        if(i == 0) {
+            buf_out[0] = HLDLC_START_FLAG;
+            buf_out[1] = buf_in[0];
+        } else if(i == (*size) - 1) {
+            if(buf_in[i] == HLDLC_START_FLAG) {
+                buf_out[cnt++] = HLDLC_CONTROL_FLAG;
+                buf_out[cnt++] = 0x5E;
+            } else if(buf_in[i] == HLDLC_STOP_FLAG) {
+                buf_out[cnt++] = HLDLC_CONTROL_FLAG;
+                buf_out[cnt++] = 0x5C;
+            } else if(buf_in[i] == HLDLC_CONTROL_FLAG) {
+                buf_out[cnt++] = HLDLC_CONTROL_FLAG;
+                buf_out[cnt++] = 0x5D;
+            } else {
+                buf_out[cnt++] = buf_in[i];
+            }
+            buf_out[cnt++] = HLDLC_STOP_FLAG;
+            *size = cnt;
+            return;
+        } else if(buf_in[i] == HLDLC_START_FLAG) {
+            buf_out[cnt++] = HLDLC_CONTROL_FLAG;
+            buf_out[cnt++] = 0x5E;
+        } else if(buf_in[i] == HLDLC_STOP_FLAG) {
+            buf_out[cnt++] = HLDLC_CONTROL_FLAG;
+            buf_out[cnt++] = 0x5C;
+        } else if(buf_in[i] == HLDLC_CONTROL_FLAG) {
+            buf_out[cnt++] = HLDLC_CONTROL_FLAG;
+            buf_out[cnt++] = 0x5D;
+        } else {
+            buf_out[cnt++] = buf_in[i];
+        }
+
+    }
+
+    return ;
+}
+
+void pc_interface() {
+
+  char buf_rs[100];
+  uint16_t buf_cnt = 0;
+
+  uint8_t buf_uart[100];
+  uint8_t buf_uart_hldlc[100];
+  uint16_t buf_uart_cnt = 0;
+  char resp;
+  uint8_t res;
+
+  bool tx_flag = false;
+
+  UARTMSP432_Object *object = uart_pq9_bus->object;
+
+  while(1) {
+
+
+    while(RingBuf_get(&object->ringBuffer, &buf_rs[buf_cnt]) != -1) {
+      buf_cnt++;
+    }
+    if(buf_cnt > 0) {
+      UART_write(uart_dbg_bus, buf_rs, buf_cnt);
+      buf_cnt = 0;
+    }
+
+    do {
+      res = UART_read(uart_dbg_bus, resp, 1);
+      if(res > 0) {
+
+        if(resp == HLDLC_STOP_FLAG) {
+          tx_flag = true;
+        } else if(resp == HLDLC_START_FLAG) {
+          buf_uart_cnt = 0;
+        }
+        buf_uart[buf_uart_cnt] = resp;
+        buf_uart_cnt++;
+        HLDLC_frame(buf_uart, buf_uart_hldlc, &buf_uart_cnt);
+      }
+    } while(res > 0);
+
+    if(tx_flag) {
+      tx_flag = false;
+      GPIO_write(PQ9_EN, 1);
+      UART_writePolling(uart_pq9_bus, buf_uart_hldlc, buf_uart_cnt);
+      GPIO_write(PQ9_EN, 0);
+      buf_cnt = 0;
+    }
+
+  }
 }
 
 void uart_test() {
@@ -1427,10 +1526,11 @@ void *mainThread(void *arg0)
 #if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
     //rs_tx_addr_test();
     rs_tx_stress_test();
+#elif (SUBS_TESTS == -2)
+    pc_interface();
 #else
     rs_rx_addr_test();
 #endif
-
 
     while(1) {
         sleep(1);
