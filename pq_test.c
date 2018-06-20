@@ -75,6 +75,7 @@
 
 
 #define SUBS_TESTS 0
+// RED sniffer -3
 // OBC sniffer -2
 // RED -1
 // RED 0, MASTER
@@ -86,7 +87,7 @@
 // EPS with SOL  6
 // EPS complete  7
 
-#if (SUBS_TESTS == 0 || SUBS_TESTS == -1)
+#if (SUBS_TESTS == 0 || SUBS_TESTS == -1 || SUBS_TESTS == -3)
 #include "RED_Board.h"
 #elif (SUBS_TESTS == 1 || SUBS_TESTS == -2)
 #include "OBC_Board.h"
@@ -138,9 +139,9 @@ void rs_test() {
 
 uint8_t get_subs_addr() {
   #if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
-      return 0x75;
+      return 0x01; //OBC
   #else
-      return 0x55;
+      return 0x07; //DBG
   #endif
 }
 
@@ -1525,9 +1526,9 @@ void *mainThread(void *arg0)
     rs_test();
 
 #if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
-    //rs_tx_addr_test();
-    rs_tx_stress_test();
-#elif (SUBS_TESTS == -2)
+    rs_tx_addr_test();
+    //rs_tx_stress_test();
+#elif (SUBS_TESTS == -2 || SUBS_TESTS == -3)
     pc_interface();
 #else
     rs_rx_addr_test();
