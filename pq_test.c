@@ -377,7 +377,8 @@ void rs_tx_stress_test() {
         GPIO_write(PQ9_EN, 0);
         test_tx_pkt_cnt++;
 
-        usleep(10000);
+
+          sleep(5);
 
         if(pq_rx_flag) {
           pq_rx_flag = 0;
@@ -428,7 +429,7 @@ void rs_rx_addr_test() {
       test_pkt.src_id = 1;
       test_pkt.size = 2;
       test_pkt.msg = resp;
-      char pq_tx_buf[20];
+      char pq_tx_buf[50];
       uint16_t pq_tx_size;
 
       test_pkt.dest_id = 0x75;
@@ -438,8 +439,15 @@ void rs_rx_addr_test() {
 
           if(pq_rx_flag) {
               pq_rx_flag = 0;
-              //sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
-              //UART_write(uart_dbg_bus, msg, strlen(msg));
+              char *pos = msg;
+              sprintf(msg, "Rx msg: ");
+              pos += strlen(msg);
+              for(uint8_t i = 0; i < pq_rx_count; i++) {
+                  sprintf(pos, ",%d ",pq_rx_buf[i]);
+                  pos += strlen(msg);
+              }
+              sprintf(pos, "\n");
+              UART_write(uart_dbg_bus, msg, strlen(msg));
 
               bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
 
@@ -460,7 +468,7 @@ void rs_rx_addr_test() {
 
           }
 
-          sleep(1);
+          usleep(100);
       } while(1);
 }
 
