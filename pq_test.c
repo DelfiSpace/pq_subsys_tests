@@ -227,14 +227,64 @@ void rs_tx_addr_test() {
         UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
         GPIO_write(PQ9_EN, 0);
 
-    } else if(res > 0 && resp[0] == 'r') {
-        sprintf(msg, "Sending query addr 0x55\n");
+    } else if(res > 0 && resp[0] == 'p') {
+        sprintf(msg, "Sending query addr 0x07\n");
         UART_write(uart_dbg_bus, msg, strlen(msg));
 
         uint8_t req[] = { 17, 1};
 
-        test_pkt.dest_id = 0x55;
+        test_pkt.dest_id = 0x07;
+        test_pkt.src_id = 0x01;
         test_pkt.size = 2;
+        test_pkt.msg = req;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        test_pkt.msg = data;
+
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
+    } else if(res > 0 && resp[0] == 'h') {
+        sprintf(msg, "Sending query addr 0x07\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        uint8_t req[] = { 3, 1};
+
+        test_pkt.dest_id = 0x07;
+        test_pkt.src_id = 0x01;
+        test_pkt.size = 2;
+        test_pkt.msg = req;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        test_pkt.msg = data;
+
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+    } else if(res > 0 && resp[0] == 'i') {
+        sprintf(msg, "Sending query addr 0x07\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        uint8_t req[] = { 1, 1, 1, 1};
+
+        test_pkt.dest_id = 0x07;
+        test_pkt.src_id = 0x01;
+        test_pkt.size = 4;
+        test_pkt.msg = req;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        test_pkt.msg = data;
+
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+    } else if(res > 0 && resp[0] == 'o') {
+        sprintf(msg, "Sending query addr 0x07\n");
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+
+        uint8_t req[] = { 1, 1, 1, 0};
+
+        test_pkt.dest_id = 0x07;
+        test_pkt.src_id = 0x01;
+        test_pkt.size = 4;
         test_pkt.msg = req;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
         test_pkt.msg = data;
@@ -252,13 +302,19 @@ void rs_tx_addr_test() {
       rx_pq_pkt.msg = data;
 
       pq_rx_flag = 0;
-      sprintf(msg, "Rx msg: %d,%d: %x %x %x %x\n",pq_rx_count, pq_size, pq_rx_buf[0], pq_rx_buf[1], pq_rx_buf[2], pq_rx_buf[3]);
-      UART_write(uart_dbg_bus, msg, strlen(msg));
+
 
       bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
 
-      sprintf(msg, "PQ Rx msg: %d,%d: %d %d %x\n",res, rx_pq_pkt.size, rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.msg[0]);
-      UART_write(uart_dbg_bus, msg, strlen(msg));
+      char *pos = msg;
+                          sprintf(msg, "PQ msg: %d,%d %d, %d: %02x,%02x : ", rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.size, res, rx_pq_pkt.msg[0], rx_pq_pkt.msg[1]);
+                          pos += strlen(msg);
+                          for(uint8_t i = 2; i < rx_pq_pkt.size; i++) {
+                              sprintf(pos, ",%02x ",rx_pq_pkt.msg[i]);
+                              pos += 4;
+                          }
+                          sprintf(pos, "\n");
+                          UART_write(uart_dbg_bus, msg, strlen(msg));
 
       if(unpack_res == false && data[0] == 17 && data[1] == 2) {
 
@@ -412,60 +468,57 @@ void rs_rx_addr_test() {
 #define HLDLC_CONTROL_FLAG      0x7D
 #define HLDLC_STOP_FLAG         0x7C
 
-void HLDLC_frame(uint8_t *buf_in, uint8_t *buf_out, uint16_t *size) {
+void HLDLC_deframe(uint8_t *buf_in,
+                              uint8_t *buf_out,
+                              const uint16_t size_in,
+                              uint16_t *size_out) {
 
-    uint16_t cnt = 2;
 
-    for(uint16_t i = 0; i < *size; i++) {
-        if(i == 0) {
-            buf_out[0] = HLDLC_START_FLAG;
-            buf_out[1] = buf_in[0];
-        } else if(i == (*size) - 1) {
-            if(buf_in[i] == HLDLC_START_FLAG) {
-                buf_out[cnt++] = HLDLC_CONTROL_FLAG;
-                buf_out[cnt++] = 0x5E;
-            } else if(buf_in[i] == HLDLC_STOP_FLAG) {
-                buf_out[cnt++] = HLDLC_CONTROL_FLAG;
-                buf_out[cnt++] = 0x5C;
-            } else if(buf_in[i] == HLDLC_CONTROL_FLAG) {
-                buf_out[cnt++] = HLDLC_CONTROL_FLAG;
-                buf_out[cnt++] = 0x5D;
+    uint16_t cnt = 0;
+
+    for(uint16_t i = 0; i < size_in; i++) {
+
+        uint8_t c = buf_in[i];
+
+        if(c == HLDLC_START_FLAG) {
+            cnt = 0;
+        } else if(c == HLDLC_STOP_FLAG) {
+            *size_out = cnt;
+            return ;
+        } else if(c == HLDLC_CONTROL_FLAG) {
+            i++;
+            c = buf_in[i];
+
+            if(c == 0x5E) {
+              buf_out[cnt++] = 0x7E;
+            } else if(c == 0x5D) {
+              buf_out[cnt++] = 0x7D;
+            } else if(c== 0x5C) {
+              buf_out[cnt++] = 0x7C;
             } else {
-                buf_out[cnt++] = buf_in[i];
+              return ;
             }
-            buf_out[cnt++] = HLDLC_STOP_FLAG;
-            *size = cnt;
-            return;
-        } else if(buf_in[i] == HLDLC_START_FLAG) {
-            buf_out[cnt++] = HLDLC_CONTROL_FLAG;
-            buf_out[cnt++] = 0x5E;
-        } else if(buf_in[i] == HLDLC_STOP_FLAG) {
-            buf_out[cnt++] = HLDLC_CONTROL_FLAG;
-            buf_out[cnt++] = 0x5C;
-        } else if(buf_in[i] == HLDLC_CONTROL_FLAG) {
-            buf_out[cnt++] = HLDLC_CONTROL_FLAG;
-            buf_out[cnt++] = 0x5D;
         } else {
-            buf_out[cnt++] = buf_in[i];
+            buf_out[cnt++] = c;
         }
 
     }
-
     return ;
 }
 
+char buf_rs[100];
+uint16_t buf_cnt = 0;
+
+uint8_t buf_uart43[100];
+uint8_t buf_uart_hldlc[100];
+uint16_t buf_uart_cnt = 0;
+uint16_t buf_uart_hldlc_cnt = 0;
+uint8_t resp54[3];
+uint8_t res;
+
+bool tx_flag = false;
+
 void pc_interface() {
-
-  char buf_rs[100];
-  uint16_t buf_cnt = 0;
-
-  uint8_t buf_uart[100];
-  uint8_t buf_uart_hldlc[100];
-  uint16_t buf_uart_cnt = 0;
-  char resp;
-  uint8_t res;
-
-  bool tx_flag = false;
 
   UARTMSP432_Object *object = uart_pq9_bus->object;
 
@@ -481,24 +534,30 @@ void pc_interface() {
     }
 
     do {
-      res = UART_read(uart_dbg_bus, resp, 1);
+      res = UART_read(uart_dbg_bus, resp54, 1);
       if(res > 0) {
-
-        if(resp == HLDLC_STOP_FLAG) {
+        char msg[] = "New byte %d\n", resp54[0];
+        UART_write(uart_dbg_bus, msg, strlen(msg));
+        if(resp54[0] == HLDLC_STOP_FLAG) {
           tx_flag = true;
-        } else if(resp == HLDLC_START_FLAG) {
+        } else if(resp54[0] == HLDLC_START_FLAG) {
           buf_uart_cnt = 0;
         }
-        buf_uart[buf_uart_cnt] = resp;
+        buf_uart43[buf_uart_cnt] = resp54[0];
         buf_uart_cnt++;
-        HLDLC_frame(buf_uart, buf_uart_hldlc, &buf_uart_cnt);
+
+
       }
     } while(res > 0);
 
     if(tx_flag) {
       tx_flag = false;
+      HLDLC_deframe(buf_uart43, buf_uart_hldlc, buf_uart_cnt, &buf_uart_hldlc_cnt);
+      uint16_t crc = calculate_crc_PQ9(buf_uart_hldlc, buf_uart_hldlc_cnt - 2);
+      cnv16_8(crc, &buf_uart_hldlc[buf_uart_hldlc_cnt-2]);
+
       GPIO_write(PQ9_EN, 1);
-      UART_writePolling(uart_pq9_bus, buf_uart_hldlc, buf_uart_cnt);
+      UART_writePolling(uart_pq9_bus, buf_uart_hldlc, buf_uart_hldlc_cnt);
       GPIO_write(PQ9_EN, 0);
       buf_cnt = 0;
     }
