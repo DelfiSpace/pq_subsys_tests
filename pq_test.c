@@ -74,7 +74,8 @@
 // TMP doesn't handle negative values
 
 
-#define SUBS_TESTS 0
+#define SUBS_TESTS -3
+// EPS master -4
 // RED sniffer -3
 // OBC sniffer -2
 // RED -1
@@ -95,7 +96,7 @@
 #include "ANT_Board.h"
 #elif (SUBS_TESTS == 3)
 #include "ADCS_Board.h"
-#elif (SUBS_TESTS >= 4)
+#elif (SUBS_TESTS >= 4 || SUBS_TESTS == -4)
 #include "EPS_Board.h"
 #endif
 
@@ -149,19 +150,24 @@ extern uint8_t pq_rx_buf[300];
 extern uint16_t pq_rx_count, pq_size;
 extern bool pq_rx_flag;
 
+char msg_uart[500] = "Testing RS tx\n";
+
+char buf_rs[100];
+uint16_t buf_cnt = 0;
+
 void rs_tx_addr_test() {
 
   UART_Params uartParams;
 
   GPIO_write(PQ9_EN, 0);
 
-  char msg[50] = "Testing RS tx\n";
-  UART_write(uart_dbg_bus, msg, strlen(msg));
+  sprintf(msg_uart, "Hello DBG, PQ9 master tester\n");
+  UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
   char resp[10];
   int32_t res = 0;
+  uint8_t dest_addr = 1;
   do {
-    //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
     sleep(1);
     char data[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 
@@ -174,8 +180,8 @@ void rs_tx_addr_test() {
 
     res = UART_read(uart_dbg_bus, resp, 1);
     if(res > 0 && resp[0] == 'a') {
-        sprintf(msg, "Sending packet addr 0x55\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending packet addr 0x55\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         test_pkt.dest_id = 0x55;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
@@ -184,8 +190,8 @@ void rs_tx_addr_test() {
         GPIO_write(PQ9_EN, 0);
 
     } else if(res > 0 && resp[0] == 'z') {
-        sprintf(msg, "Sending packet Wr addr 0x55\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending packet Wr addr 0x55\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         test_pkt.dest_id = 0x55;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
@@ -194,8 +200,8 @@ void rs_tx_addr_test() {
         GPIO_write(PQ9_EN, 0);
 
     } else if(res > 0 && resp[0] == 's') {
-        sprintf(msg, "Sending packet addr 0x75\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending packet addr 0x75\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         test_pkt.dest_id = 0x75;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
@@ -204,8 +210,8 @@ void rs_tx_addr_test() {
         GPIO_write(PQ9_EN, 0);
 
     } else if(res > 0 && resp[0] == 'w') {
-        sprintf(msg, "Error packet addr 0x55\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Error packet addr 0x55\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         test_pkt.dest_id = 0x55;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
@@ -216,8 +222,8 @@ void rs_tx_addr_test() {
         GPIO_write(PQ9_EN, 0);
 
     } else if(res > 0 && resp[0] == 'e') {
-        sprintf(msg, "Error packet addr 0x55\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Error packet addr 0x55\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         test_pkt.dest_id = 0x55;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
@@ -228,12 +234,12 @@ void rs_tx_addr_test() {
         GPIO_write(PQ9_EN, 0);
 
     } else if(res > 0 && resp[0] == 'p') {
-        sprintf(msg, "Sending query addr 0x07\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending query addr %d\n", dest_addr);
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         uint8_t req[] = { 17, 1};
 
-        test_pkt.dest_id = 0x07;
+        test_pkt.dest_id = dest_addr;
         test_pkt.src_id = 0x01;
         test_pkt.size = 2;
         test_pkt.msg = req;
@@ -245,12 +251,12 @@ void rs_tx_addr_test() {
         GPIO_write(PQ9_EN, 0);
 
     } else if(res > 0 && resp[0] == 'h') {
-        sprintf(msg, "Sending query addr 0x07\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending query addr %d\n", dest_addr);
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
         uint8_t req[] = { 3, 1};
 
-        test_pkt.dest_id = 0x07;
+        test_pkt.dest_id = dest_addr;
         test_pkt.src_id = 0x01;
         test_pkt.size = 2;
         test_pkt.msg = req;
@@ -261,12 +267,12 @@ void rs_tx_addr_test() {
         UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
         GPIO_write(PQ9_EN, 0);
     } else if(res > 0 && resp[0] == 'i') {
-        sprintf(msg, "Sending query addr 0x07\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending query addr %d\n", dest_addr);
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
-        uint8_t req[] = { 1, 1, 1, 1};
+        uint8_t req[] = { 1, 1, 4, 1};
 
-        test_pkt.dest_id = 0x07;
+        test_pkt.dest_id = dest_addr;
         test_pkt.src_id = 0x01;
         test_pkt.size = 4;
         test_pkt.msg = req;
@@ -277,14 +283,72 @@ void rs_tx_addr_test() {
         UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
         GPIO_write(PQ9_EN, 0);
     } else if(res > 0 && resp[0] == 'o') {
-        sprintf(msg, "Sending query addr 0x07\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Sending query addr %d\n", dest_addr);
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
-        uint8_t req[] = { 1, 1, 1, 0};
+        uint8_t req[] = { 1, 1, 4, 0};
 
-        test_pkt.dest_id = 0x07;
+        test_pkt.dest_id = dest_addr;
         test_pkt.src_id = 0x01;
         test_pkt.size = 4;
+        test_pkt.msg = req;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        test_pkt.msg = data;
+
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+    } else if(res > 0 && resp[0] == 'm') {
+        sprintf(msg_uart, "Change address OBC: 1 EPS: 2 DBG: 7\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+
+        res = 0;
+        while(res == 0) {
+            res = UART_read(uart_dbg_bus, resp, 1);
+
+            if(res > 0 && resp[0] == '1') {
+                dest_addr = 1;
+                sprintf(msg_uart, "OBC selected\n");
+                UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+            } else if(res > 0 && resp[0] == '2') {
+                            dest_addr = 2;
+                            sprintf(msg_uart, "EPS selected\n");
+                            UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+            } else if(res > 0 && resp[0] == '7') {
+                dest_addr = 7;
+                sprintf(msg_uart, "DBG selected\n");
+                UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+            }
+        }
+        sprintf(msg_uart, "Change address finished\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+
+    } else if(res > 0 && resp[0] == 'g') {
+        sprintf(msg_uart, "Sending query addr GET %d\n", dest_addr);
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+
+        uint8_t req[] = { 1, 2, 42};
+
+        test_pkt.dest_id = dest_addr;
+        test_pkt.src_id = 0x01;
+        test_pkt.size = 3;
+        test_pkt.msg = req;
+        pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
+        test_pkt.msg = data;
+
+        GPIO_write(PQ9_EN, 1);
+        UART_writePolling(uart_pq9_bus, pq_tx_buf, pq_tx_size);
+        GPIO_write(PQ9_EN, 0);
+
+    } else if(res > 0 && resp[0] == 't') {
+        sprintf(msg_uart, "Sending query addr SET %d\n", dest_addr);
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+
+        uint8_t req[] = { 1, 1, 42, 0xBA, 0xAD,0xF0,0x0D};
+
+        test_pkt.dest_id = dest_addr;
+        test_pkt.src_id = 0x01;
+        test_pkt.size = 7;
         test_pkt.msg = req;
         pack_PQ9_BUS(&test_pkt, pq_tx_buf, &pq_tx_size);
         test_pkt.msg = data;
@@ -295,6 +359,17 @@ void rs_tx_addr_test() {
     }
     resp[0] = 'o';
 
+     UARTMSP432_Object *object = uart_pq9_bus->object;
+
+     while(RingBuf_get(&object->ringBuffer, &buf_rs[buf_cnt]) != -1) {
+       buf_cnt++;
+     }
+     while(buf_cnt > 0) {
+       sprintf(msg_uart,"%02x ", buf_rs[buf_cnt]);
+       UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
+       buf_cnt--;
+     }
+
     if(pq_rx_flag) {
 
       uint8_t data[100];
@@ -303,23 +378,33 @@ void rs_tx_addr_test() {
 
       pq_rx_flag = 0;
 
+      char *pos = msg_uart;
+
+      sprintf(msg_uart, "msg: ");
+                                pos += strlen(msg_uart);
+                                for(uint8_t i = 2; i < pq_rx_count; i++) {
+                                    sprintf(pos, ",%02x ",pq_rx_buf[i]);
+                                    pos += 4;
+                                }
+                                sprintf(pos, "\n");
+                                UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
       bool unpack_res = unpack_PQ9_BUS(pq_rx_buf, pq_rx_count, &rx_pq_pkt);
 
-      char *pos = msg;
-                          sprintf(msg, "PQ msg: %d,%d %d, %d: %02x,%02x : ", rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.size, res, rx_pq_pkt.msg[0], rx_pq_pkt.msg[1]);
-                          pos += strlen(msg);
+      *pos = msg_uart;
+                          sprintf(msg_uart, "PQ msg: %d,%d %d, %d: %02x,%02x : ", rx_pq_pkt.src_id, rx_pq_pkt.dest_id, rx_pq_pkt.size, res, rx_pq_pkt.msg[0], rx_pq_pkt.msg[1]);
+                          pos += strlen(msg_uart);
                           for(uint8_t i = 2; i < rx_pq_pkt.size; i++) {
                               sprintf(pos, ",%02x ",rx_pq_pkt.msg[i]);
                               pos += 4;
                           }
                           sprintf(pos, "\n");
-                          UART_write(uart_dbg_bus, msg, strlen(msg));
+                          UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
       if(unpack_res == false && data[0] == 17 && data[1] == 2) {
 
-        sprintf(msg, "Got RESPONSE\n");
-        UART_write(uart_dbg_bus, msg, strlen(msg));
+        sprintf(msg_uart, "Got RESPONSE\n");
+        UART_write(uart_dbg_bus, msg_uart, strlen(msg_uart));
 
       }
       sleep(1);
@@ -514,8 +599,7 @@ void HLDLC_deframe(uint8_t *buf_in,
     return ;
 }
 
-char buf_rs[100];
-uint16_t buf_cnt = 0;
+
 
 uint8_t buf_uart43[100];
 uint8_t buf_uart_hldlc[100];
@@ -524,54 +608,75 @@ uint16_t buf_uart_hldlc_cnt = 0;
 uint8_t resp54[3];
 uint8_t res;
 
-bool tx_flag = false;
+bool ctrl_flag, strt_flag = false;
 
 void pc_interface() {
 
   UARTMSP432_Object *object = uart_pq9_bus->object;
 
+  char temp[10];
+
+  uint8_t tx_count, tx_size, tx_buf[255];
+
   while(1) {
 
-
+    // PQ9 -> PC
     while(RingBuf_get(&object->ringBuffer, &buf_rs[buf_cnt]) != -1) {
       buf_cnt++;
     }
     if(buf_cnt > 0) {
+      //sprintf(temp,"%02x ", buf_rs[buf_cnt]);
+      //UART_write(uart_dbg_bus, temp, strlen(temp));
       UART_write(uart_dbg_bus, buf_rs, buf_cnt);
       buf_cnt = 0;
     }
 
+    // PC -> PQ9
     do {
       res = UART_read(uart_dbg_bus, resp54, 1);
       if(res > 0) {
-        char msg[] = "New byte %d\n", resp54[0];
-        UART_write(uart_dbg_bus, msg, strlen(msg));
-        if(resp54[0] == HLDLC_STOP_FLAG) {
-          tx_flag = true;
-        } else if(resp54[0] == HLDLC_START_FLAG) {
-          buf_uart_cnt = 0;
+        char msg[20];
+        //sprintf(msg, "New byte %02x\n", resp54[0]);
+        //UART_write(uart_dbg_bus, msg, strlen(msg));
+        if(resp54[0] == HLDLC_START_FLAG) {
+          strt_flag = true;
+
+        } else if(resp54[0] == HLDLC_CONTROL_FLAG) {
+          ctrl_flag = true;
+        } else if(strt_flag) {
+           strt_flag = false;
+           tx_buf[0] = resp54[0];
+           tx_count = 1;
+        } else if(ctrl_flag) {
+           ctrl_flag = false;
+           if(resp54[0] == 0x5D) {
+             tx_buf[tx_count] = 0x7D;
+             tx_count++;
+           } else if(resp54[0] == 0x5E) {
+             tx_buf[tx_count] = 0x7E;
+             tx_count++;
+           }
+        } else if(tx_count == 1) {
+          tx_buf[tx_count] = resp54[0];
+          tx_size = resp54[0] + 5;
+          tx_count++;
+        } else if(tx_count > 0 && tx_count < tx_size - 1) {
+          tx_buf[tx_count] = resp54[0];
+          tx_count++;
+        } else if(tx_count > 0 && tx_count == tx_size - 1) {
+          tx_buf[tx_count] = resp54[0];
+          tx_count++;
+          GPIO_write(PQ9_EN, 1);
+          UART_writePolling(uart_pq9_bus, tx_buf, tx_count);
+          GPIO_write(PQ9_EN, 0);
         }
-        buf_uart43[buf_uart_cnt] = resp54[0];
-        buf_uart_cnt++;
-
-
       }
     } while(res > 0);
 
-    if(tx_flag) {
-      tx_flag = false;
-      HLDLC_deframe(buf_uart43, buf_uart_hldlc, buf_uart_cnt, &buf_uart_hldlc_cnt);
-      uint16_t crc = calculate_crc_PQ9(buf_uart_hldlc, buf_uart_hldlc_cnt - 2);
-      cnv16_8(crc, &buf_uart_hldlc[buf_uart_hldlc_cnt-2]);
-
-      GPIO_write(PQ9_EN, 1);
-      UART_writePolling(uart_pq9_bus, buf_uart_hldlc, buf_uart_hldlc_cnt);
-      GPIO_write(PQ9_EN, 0);
-      buf_cnt = 0;
-    }
-
   }
 }
+
+
 
 void uart_test() {
 
@@ -589,15 +694,15 @@ void uart_test() {
       uartParams.baudRate = 9600;
       uart_dbg_bus = UART_open(DBG, &uartParams);
 
-      UART_write(uart_dbg_bus, "Hello DBG\n", 10);
+      //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
 
-      char msg[] = "press key to continue\n";
-      UART_write(uart_dbg_bus, msg, strlen(msg));
+      //char msg[] = "press key to continue\n";
+      //UART_write(uart_dbg_bus, msg, strlen(msg));
 
       char resp[10];
       int32_t res = 0;
       //do {
-          UART_write(uart_dbg_bus, "Hello DBG\n", 10);
+          //UART_write(uart_dbg_bus, "Hello DBG\n", 10);
           sleep(1);
         res = UART_read(uart_dbg_bus, resp, 1);
      //} while(res <= 0);
@@ -860,21 +965,6 @@ void init_i2c_EPS_BATT() {
 
 #endif
 
-#if (SUBS_TESTS == 6 || SUBS_TESTS == 7)
-
-void init_i2c_EPS_SOL() {
-
-  I2C_Params      i2cParams;
-
-  I2C_Params_init(&i2cParams);
-  i2cParams.transferMode = I2C_MODE_BLOCKING;
-  i2cParams.bitRate = I2C_100kHz;
-
-  i2c = I2C_open(EPS_SOL, &i2cParams);
-
-}
-
-#endif
 
 #if (SUBS_TESTS == 3)
 
@@ -1077,11 +1167,73 @@ void ina_meas(uint8_t i2c_add) {
  *  ------------ LTC functions ------------
  */
 
+void er() {
+  sleep(1);
+}
+
+float ltc_to_c(uint8_t raw_m, uint8_t raw_l) {
+    uint16_t temp = (raw_m << 8) | raw_l;
+    float st1 = (float) temp;
+
+    float st2 = st1/65535;
+    float st3 = st2*600;
+    float st4 = st3-(float)(272.15);
+    return st4;
+}
+
+float ltc_to_v(uint8_t raw_m, uint8_t raw_l) {
+    uint16_t temp = (raw_m << 8) | raw_l;
+    float st1 = (float) temp;
+
+    float st2 = st1/65535;
+    float st3 = st2*6;
+    return st3;
+}
+
+float ltc_to_a(uint8_t raw_m, uint8_t raw_l) {
+    uint16_t temp = (raw_m << 8) | raw_l;
+    float st1 = (float) temp;
+
+    //float st2 = st1*(float)0.46;
+    //float st2 = (float)(st1 * (float)7.0);
+    float st2 = (float)(st1 * (float)0.085);
+    return st2;
+}
+
+struct ltc_device {
+  dev_id id;
+  uint16_t R_sense;
+  uint8_t M;
+  uint16_t Q;
+  uint16_t R;
+  uint16_t I;
+  int16_t temp;
+}ltc_dev;
+
 void ltc_test() {
+
+    uint8_t t_l, t_m, v_lsb, v_msb , err_flag, status_reg, acc_l, acc_m = 0;
+
+    ltc_dev.R_sense = 0;
+      ltc_dev.M = 0;
+      ltc_dev.Q = 750;
+      ltc_dev.R = 33;
+      ltc_dev.I = 1500;
+      ltc_init(ltc_dev.id,
+               &(ltc_dev.R_sense),
+               &(ltc_dev.M),
+               ltc_dev.Q,
+               ltc_dev.R,
+               ltc_dev.I);
 
     /* Buffers used in this code example */
         uint8_t             txBuffer[10];
         uint8_t             rxBuffer[10];
+        bool result = false;
+
+        char u_msg[100];
+        char resp[10];
+        int32_t u_res = 0;
 
         I2C_Transaction i2cTransaction;
 
@@ -1096,7 +1248,7 @@ void ltc_test() {
                  * READ LTC2942 configuration Register
                  */
                 txBuffer[0] = 0x01;
-                txBuffer[1] = 0xF8;
+                txBuffer[1] = 0xC8;
                 /*
                  * Response from slave for GETSTATUS Cmd
                  * rxBuffer[0] = status
@@ -1106,15 +1258,18 @@ void ltc_test() {
                 i2cTransaction.writeCount = 1;
                 i2cTransaction.readBuf = rxBuffer;
                 i2cTransaction.readCount = 1;
-
-                I2C_transfer(i2c, &i2cTransaction);
-
+while(result == false) {
+                result = I2C_transfer(i2c, &i2cTransaction);
+                if(result == false) {
+                    UART_write(uart_dbg_bus, "e\n", 2);
+                }
+}
 
                 /*
                  * WRITE LTC2942 configuration Register
                  */
                 txBuffer[0] = 0x01;
-                txBuffer[1] = 0xF8;
+                txBuffer[1] = 0xC8;
                 /*
                  * Response from slave for GETSTATUS Cmd
                  * rxBuffer[0] = status
@@ -1125,8 +1280,305 @@ void ltc_test() {
                 i2cTransaction.readBuf = rxBuffer;
                 i2cTransaction.readCount = 0;
 
-                I2C_transfer(i2c, &i2cTransaction);
+               // result = I2C_transfer(i2c, &i2cTransaction);
+                if(result == false) {
+                                    UART_write(uart_dbg_bus, "e\n", 2);
+                                }
 
+
+
+                while(1) {
+ t_l = 0;
+ t_m = 0;
+err_flag = 0;
+ status_reg = 0;
+  acc_l = 0;
+  acc_m = 0;
+    /*
+                     * WRITE LTC2942 configuration Register
+                     */
+                    txBuffer[0] = 0x0D;
+                    txBuffer[1] = 0xF8;
+
+                    rxBuffer[0] = 0x00;
+                    result = false;
+                    /*
+                     * Response from slave for GETSTATUS Cmd
+                     * rxBuffer[0] = status
+                     */
+                    i2cTransaction.slaveAddress = 0x64;
+                    i2cTransaction.writeBuf = txBuffer;
+                    i2cTransaction.writeCount = 1;
+                    i2cTransaction.readBuf = rxBuffer;
+                    i2cTransaction.readCount = 1;
+
+                    result = I2C_transfer(i2c, &i2cTransaction);
+                    if(result == false) {
+                        err_flag = true;
+                    }
+                    t_l = rxBuffer[0];
+                    usleep(10);
+
+                    /*
+                     * WRITE LTC2942 configuration Register
+                     */
+                    txBuffer[0] = 0x0C;
+                    txBuffer[1] = 0xF8;
+
+                    rxBuffer[0] = 0x00;
+                    result = false;
+                    /*
+                     * Response from slave for GETSTATUS Cmd
+                     * rxBuffer[0] = status
+                     */
+                    i2cTransaction.slaveAddress = 0x64;
+                    i2cTransaction.writeBuf = txBuffer;
+                    i2cTransaction.writeCount = 1;
+                    i2cTransaction.readBuf = rxBuffer;
+                    i2cTransaction.readCount = 1;
+
+                    result = I2C_transfer(i2c, &i2cTransaction);
+                    if(result == false) {
+                        err_flag = true;
+                    }
+                    t_m = rxBuffer[0];
+                    usleep(10);
+                                        /*
+                     * WRITE LTC2942 configuration Register
+                     */
+                    txBuffer[0] = 0x09;
+                    txBuffer[1] = 0xF8;
+
+                    rxBuffer[0] = 0x00;
+                                        result = false;
+                    /*
+                     * Response from slave for GETSTATUS Cmd
+                     * rxBuffer[0] = status
+                     */
+                    i2cTransaction.slaveAddress = 0x64;
+                    i2cTransaction.writeBuf = txBuffer;
+                    i2cTransaction.writeCount = 1;
+                    i2cTransaction.readBuf = rxBuffer;
+                    i2cTransaction.readCount = 1;
+
+                    result = I2C_transfer(i2c, &i2cTransaction);
+                    if(result == false) {
+                        err_flag = true;
+                    }
+                    v_lsb = rxBuffer[0];
+                    usleep(10);
+                                                            /*
+                     * WRITE LTC2942 configuration Register
+                     */
+                    txBuffer[0] = 0x08;
+                    txBuffer[1] = 0xF8;
+
+                    rxBuffer[0] = 0x00;
+                    result = false;
+                    /*
+                     * Response from slave for GETSTATUS Cmd
+                     * rxBuffer[0] = status
+                     */
+                    i2cTransaction.slaveAddress = 0x64;
+                    i2cTransaction.writeBuf = txBuffer;
+                    i2cTransaction.writeCount = 1;
+                    i2cTransaction.readBuf = rxBuffer;
+                    i2cTransaction.readCount = 1;
+
+                    result = I2C_transfer(i2c, &i2cTransaction);
+                    if(result == false) {
+                        err_flag = true;
+                    }
+                    v_msb = rxBuffer[0];
+                    usleep(10);
+
+        /*
+           * start temp LTC2942 configuration Register
+           */
+          txBuffer[0] = 0x02;
+
+          rxBuffer[0] = 0x00;
+          result = false;
+          /*
+           * Response from slave for GETSTATUS Cmd
+           * rxBuffer[0] = status
+           */
+          i2cTransaction.slaveAddress = 0x64;
+          i2cTransaction.writeBuf = txBuffer;
+          i2cTransaction.writeCount = 1;
+          i2cTransaction.readBuf = rxBuffer;
+          i2cTransaction.readCount = 1;
+
+          result = I2C_transfer(i2c, &i2cTransaction);
+          if(result == false) {
+              err_flag = true;
+          }
+          acc_m = rxBuffer[0];
+          usleep(10);
+
+          /*
+             * start temp LTC2942 configuration Register
+             */
+            txBuffer[0] = 0x03;
+
+            rxBuffer[0] = 0x00;
+            result = false;
+            /*
+             * Response from slave for GETSTATUS Cmd
+             * rxBuffer[0] = status
+             */
+            i2cTransaction.slaveAddress = 0x64;
+            i2cTransaction.writeBuf = txBuffer;
+            i2cTransaction.writeCount = 1;
+            i2cTransaction.readBuf = rxBuffer;
+            i2cTransaction.readCount = 1;
+
+            result = I2C_transfer(i2c, &i2cTransaction);
+            if(result == false) {
+                err_flag = true;
+            }
+            acc_l = rxBuffer[0];
+            usleep(10);
+
+
+      /*
+         * start temp LTC2942 configuration Register
+         */
+        txBuffer[0] = 0x00;
+
+        rxBuffer[0] = 0x00;
+        result = false;
+        /*
+         * Response from slave for GETSTATUS Cmd
+         * rxBuffer[0] = status
+         */
+        i2cTransaction.slaveAddress = 0x64;
+        i2cTransaction.writeBuf = txBuffer;
+        i2cTransaction.writeCount = 1;
+        i2cTransaction.readBuf = rxBuffer;
+        i2cTransaction.readCount = 1;
+
+        result = I2C_transfer(i2c, &i2cTransaction);
+        if(result == false) {
+            err_flag = true;
+        }
+        status_reg = rxBuffer[0];
+        usleep(10);
+
+        float t = ltc_to_c(t_m, t_l);
+        float v = ltc_to_v(v_msb, v_lsb);
+        float a = ltc_to_a(acc_m,acc_l);
+
+        sprintf(u_msg, "LTS: %02x, %02x%02x, %02x%02x, %02x%02x, %d, %d, %d\n", status_reg, acc_m,acc_l,t_m, t_l, v_msb,v_lsb, (int)t, (int)v, (int)a);
+        UART_write(uart_dbg_bus, u_msg, strlen(u_msg));
+
+
+
+        u_res = UART_read(uart_dbg_bus, resp, 1);
+
+        if(u_res > 0) {
+        /*
+           * start temp LTC2942 configuration Register
+           */
+          txBuffer[0] = 0x01;
+          txBuffer[1] = 0xC9;
+
+          rxBuffer[0] = 0x00;
+          result = false;
+          /*
+           * Response from slave for GETSTATUS Cmd
+           * rxBuffer[0] = status
+           */
+          i2cTransaction.slaveAddress = 0x64;
+          i2cTransaction.writeBuf = txBuffer;
+          i2cTransaction.writeCount = 2;
+          i2cTransaction.readBuf = rxBuffer;
+          i2cTransaction.readCount = 0;
+
+          result = I2C_transfer(i2c, &i2cTransaction);
+          if(result == false) {
+              err_flag = true;
+          }
+
+          usleep(100);
+
+          if(resp[0] == '1') {
+            txBuffer[1] = 0x00;
+          }  else if(resp[0] == '0') {
+              txBuffer[1] = 0xff;
+          } else {
+            txBuffer[1] = 0x80;
+          }
+
+          /*
+             * start temp LTC2942 configuration Register
+             */
+            txBuffer[0] = 0x02;
+
+            rxBuffer[0] = 0x00;
+            result = false;
+            /*
+             * Response from slave for GETSTATUS Cmd
+             * rxBuffer[0] = status
+             */
+            i2cTransaction.slaveAddress = 0x64;
+            i2cTransaction.writeBuf = txBuffer;
+            i2cTransaction.writeCount = 2;
+            i2cTransaction.readBuf = rxBuffer;
+            i2cTransaction.readCount = 0;
+
+            result = I2C_transfer(i2c, &i2cTransaction);
+            if(result == false) {
+                err_flag = true;
+            }
+
+            usleep(100);
+            /*
+               * start temp LTC2942 configuration Register
+               */
+              txBuffer[0] = 0x03;
+
+              rxBuffer[0] = 0x00;
+              result = false;
+              /*
+               * Response from slave for GETSTATUS Cmd
+               * rxBuffer[0] = status
+               */
+              i2cTransaction.slaveAddress = 0x64;
+              i2cTransaction.writeBuf = txBuffer;
+              i2cTransaction.writeCount = 2;
+              i2cTransaction.readBuf = rxBuffer;
+              i2cTransaction.readCount = 0;
+
+              result = I2C_transfer(i2c, &i2cTransaction);
+              if(result == false) {
+                  err_flag = true;
+              }
+
+          /*
+             * start temp LTC2942 configuration Register
+             */
+            txBuffer[0] = 0x01;
+            txBuffer[1] = 0xC8;
+
+            rxBuffer[0] = 0x00;
+            result = false;
+            /*
+             * Response from slave for GETSTATUS Cmd
+             * rxBuffer[0] = status
+             */
+            i2cTransaction.slaveAddress = 0x64;
+            i2cTransaction.writeBuf = txBuffer;
+            i2cTransaction.writeCount = 2;
+            i2cTransaction.readBuf = rxBuffer;
+            i2cTransaction.readCount = 0;
+
+            result = I2C_transfer(i2c, &i2cTransaction);
+            if(result == false) {
+                err_flag = true;
+            }
+          }
+    }
 }
 
 void ltc_meas() {
@@ -1339,7 +1791,7 @@ void mag_test() {
  *  ------------ EPS SW functions ------------
  */
 
-#if (SUBS_TESTS >= 4 )
+#if (SUBS_TESTS >= 4 || SUBS_TESTS == -4)
 
 void sw_test() {
 
@@ -1582,17 +2034,28 @@ void *mainThread(void *arg0)
     #endif
     I2C_init();
 
-    #if (SUBS_TESTS >= 4 )
+    #if (SUBS_TESTS >= 4 || SUBS_TESTS == -4)
       sw_open();
     #endif
-
-
 
     uart_test();
 
     rs_test();
 
-#if (SUBS_TESTS == 1 || SUBS_TESTS == 0)
+
+    //LTC board specific
+    #if (SUBS_TESTS == 5)
+    init_i2c_EPS_BRD();
+
+    init_i2c_EPS_BATT();
+
+
+
+    ltc_test();
+    #endif
+
+
+#if (SUBS_TESTS == 1 || SUBS_TESTS == 0 || SUBS_TESTS == -4)
     rs_tx_addr_test();
     //rs_tx_stress_test();
 #elif (SUBS_TESTS == -2 || SUBS_TESTS == -3)
@@ -1649,7 +2112,7 @@ void *mainThread(void *arg0)
 
     //EPS board specific
     #if (SUBS_TESTS >= 4)
-    fram_test();
+    //fram_test();
 
    // sw_test();
 

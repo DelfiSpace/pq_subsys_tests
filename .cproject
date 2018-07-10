@@ -102,7 +102,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="EPS_Board.c|ADCS_Board.c|ADCS.pinmux|ANT_Board.c|ANT.pinmux|EPS.pinmux|OBC.pinmux" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="OBC_Board.c|EPS_Board.c|ADCS_Board.c|ADCS.pinmux|ANT_Board.c|ANT.pinmux|EPS.pinmux|OBC.pinmux" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
